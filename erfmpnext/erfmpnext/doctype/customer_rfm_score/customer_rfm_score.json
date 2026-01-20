@@ -1,0 +1,171 @@
+{
+    "actions": [],
+    "autoname": "field:customer",
+    "creation": "2025-01-20 17:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "customer",
+        "customer_name",
+        "section_scores",
+        "recency_score",
+        "frequency_score",
+        "monetary_score",
+        "rfm_score",
+        "column_break_segment",
+        "segment",
+        "previous_segment",
+        "segment_changed_on",
+        "section_stats",
+        "last_purchase_date",
+        "days_since_purchase",
+        "column_break_stats2",
+        "total_orders",
+        "total_spent",
+        "section_calculated",
+        "last_calculated"
+    ],
+    "fields": [
+        {
+            "fieldname": "customer",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "in_standard_filter": 1,
+            "label": "Customer",
+            "options": "Customer",
+            "reqd": 1,
+            "unique": 1
+        },
+        {
+            "fetch_from": "customer.customer_name",
+            "fieldname": "customer_name",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Customer Name",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_scores",
+            "fieldtype": "Section Break",
+            "label": "RFM Scores"
+        },
+        {
+            "fieldname": "recency_score",
+            "fieldtype": "Int",
+            "in_list_view": 1,
+            "label": "Recency (R)"
+        },
+        {
+            "fieldname": "frequency_score",
+            "fieldtype": "Int",
+            "in_list_view": 1,
+            "label": "Frequency (F)"
+        },
+        {
+            "fieldname": "monetary_score",
+            "fieldtype": "Int",
+            "in_list_view": 1,
+            "label": "Monetary (M)"
+        },
+        {
+            "fieldname": "rfm_score",
+            "fieldtype": "Data",
+            "label": "RFM Score",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_segment",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "segment",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "in_standard_filter": 1,
+            "label": "Segment",
+            "options": "\nChampions\nLoyal\nPotential Loyalists\nNew Customers\nPromising\nNeed Attention\nAbout to Sleep\nAt Risk\nCant Lose\nHibernating\nLost"
+        },
+        {
+            "fieldname": "previous_segment",
+            "fieldtype": "Data",
+            "label": "Previous Segment",
+            "read_only": 1
+        },
+        {
+            "fieldname": "segment_changed_on",
+            "fieldtype": "Date",
+            "label": "Segment Changed On",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_stats",
+            "fieldtype": "Section Break",
+            "label": "Purchase Statistics"
+        },
+        {
+            "fieldname": "last_purchase_date",
+            "fieldtype": "Date",
+            "label": "Last Purchase Date",
+            "read_only": 1
+        },
+        {
+            "fieldname": "days_since_purchase",
+            "fieldtype": "Int",
+            "label": "Days Since Purchase",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_stats2",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "total_orders",
+            "fieldtype": "Int",
+            "label": "Total Orders",
+            "read_only": 1
+        },
+        {
+            "fieldname": "total_spent",
+            "fieldtype": "Currency",
+            "label": "Total Spent",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_calculated",
+            "fieldtype": "Section Break"
+        },
+        {
+            "fieldname": "last_calculated",
+            "fieldtype": "Datetime",
+            "label": "Last Calculated",
+            "read_only": 1
+        }
+    ],
+    "index_web_pages_for_search": 1,
+    "links": [],
+    "modified": "2025-01-20 17:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "Erfmpnext",
+    "name": "Customer RFM Score",
+    "naming_rule": "By fieldname",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": [],
+    "title_field": "customer_name",
+    "track_changes": 1
+}

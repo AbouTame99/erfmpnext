@@ -1,0 +1,193 @@
+{
+    "actions": [],
+    "allow_rename": 1,
+    "creation": "2025-01-20 17:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "section_recency",
+        "recency_days_5",
+        "recency_days_4",
+        "recency_days_3",
+        "recency_days_2",
+        "column_break_freq",
+        "frequency_orders_5",
+        "frequency_orders_4",
+        "frequency_orders_3",
+        "frequency_orders_2",
+        "section_monetary",
+        "monetary_amount_5",
+        "monetary_amount_4",
+        "monetary_amount_3",
+        "monetary_amount_2",
+        "column_break_settings",
+        "analysis_period_days",
+        "auto_calculate",
+        "section_alerts",
+        "alert_on_downgrade",
+        "alert_recipients"
+    ],
+    "fields": [
+        {
+            "fieldname": "section_recency",
+            "fieldtype": "Section Break",
+            "label": "Recency Thresholds (Days)"
+        },
+        {
+            "default": "30",
+            "description": "Score 5: Customer purchased within this many days",
+            "fieldname": "recency_days_5",
+            "fieldtype": "Int",
+            "label": "Score 5 (Days)"
+        },
+        {
+            "default": "60",
+            "description": "Score 4: Customer purchased within this many days",
+            "fieldname": "recency_days_4",
+            "fieldtype": "Int",
+            "label": "Score 4 (Days)"
+        },
+        {
+            "default": "90",
+            "description": "Score 3: Customer purchased within this many days",
+            "fieldname": "recency_days_3",
+            "fieldtype": "Int",
+            "label": "Score 3 (Days)"
+        },
+        {
+            "default": "180",
+            "description": "Score 2: Customer purchased within this many days",
+            "fieldname": "recency_days_2",
+            "fieldtype": "Int",
+            "label": "Score 2 (Days)"
+        },
+        {
+            "fieldname": "column_break_freq",
+            "fieldtype": "Column Break",
+            "label": "Frequency Thresholds (Orders)"
+        },
+        {
+            "default": "10",
+            "description": "Score 5: Customer has this many or more orders",
+            "fieldname": "frequency_orders_5",
+            "fieldtype": "Int",
+            "label": "Score 5 (Orders)"
+        },
+        {
+            "default": "7",
+            "description": "Score 4: Customer has this many or more orders",
+            "fieldname": "frequency_orders_4",
+            "fieldtype": "Int",
+            "label": "Score 4 (Orders)"
+        },
+        {
+            "default": "4",
+            "description": "Score 3: Customer has this many or more orders",
+            "fieldname": "frequency_orders_3",
+            "fieldtype": "Int",
+            "label": "Score 3 (Orders)"
+        },
+        {
+            "default": "2",
+            "description": "Score 2: Customer has this many or more orders",
+            "fieldname": "frequency_orders_2",
+            "fieldtype": "Int",
+            "label": "Score 2 (Orders)"
+        },
+        {
+            "fieldname": "section_monetary",
+            "fieldtype": "Section Break",
+            "label": "Monetary Thresholds (Amount)"
+        },
+        {
+            "default": "50000",
+            "description": "Score 5: Customer spent this amount or more",
+            "fieldname": "monetary_amount_5",
+            "fieldtype": "Currency",
+            "label": "Score 5 (Amount)"
+        },
+        {
+            "default": "25000",
+            "description": "Score 4: Customer spent this amount or more",
+            "fieldname": "monetary_amount_4",
+            "fieldtype": "Currency",
+            "label": "Score 4 (Amount)"
+        },
+        {
+            "default": "10000",
+            "description": "Score 3: Customer spent this amount or more",
+            "fieldname": "monetary_amount_3",
+            "fieldtype": "Currency",
+            "label": "Score 3 (Amount)"
+        },
+        {
+            "default": "5000",
+            "description": "Score 2: Customer spent this amount or more",
+            "fieldname": "monetary_amount_2",
+            "fieldtype": "Currency",
+            "label": "Score 2 (Amount)"
+        },
+        {
+            "fieldname": "column_break_settings",
+            "fieldtype": "Column Break",
+            "label": "Settings"
+        },
+        {
+            "default": "365",
+            "description": "How many days back to analyze for F and M scores",
+            "fieldname": "analysis_period_days",
+            "fieldtype": "Int",
+            "label": "Analysis Period (Days)"
+        },
+        {
+            "default": "1",
+            "description": "Automatically calculate RFM scores daily",
+            "fieldname": "auto_calculate",
+            "fieldtype": "Check",
+            "label": "Auto Calculate Daily"
+        },
+        {
+            "fieldname": "section_alerts",
+            "fieldtype": "Section Break",
+            "label": "Alert Settings"
+        },
+        {
+            "default": "1",
+            "description": "Send alert when a customer's segment downgrades",
+            "fieldname": "alert_on_downgrade",
+            "fieldtype": "Check",
+            "label": "Alert on Downgrade"
+        },
+        {
+            "description": "User who will receive segment change alerts",
+            "fieldname": "alert_recipients",
+            "fieldtype": "Link",
+            "label": "Alert Recipient",
+            "options": "User"
+        }
+    ],
+    "index_web_pages_for_search": 1,
+    "issingle": 1,
+    "links": [],
+    "modified": "2025-01-20 17:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "Erfmpnext",
+    "name": "RFM Settings",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "print": 1,
+            "read": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": [],
+    "track_changes": 1
+}

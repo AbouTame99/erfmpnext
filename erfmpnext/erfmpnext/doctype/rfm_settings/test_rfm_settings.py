@@ -1,0 +1,2 @@
+# Copyright (c) 2025, Your Company and Contributors
+# See license.txt

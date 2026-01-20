@@ -1,0 +1,117 @@
+{
+    "actions": [],
+    "autoname": "format:RFM-ALERT-{#####}",
+    "creation": "2025-01-20 17:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "customer",
+        "customer_name",
+        "alert_type",
+        "section_segments",
+        "previous_segment",
+        "new_segment",
+        "column_break_status",
+        "is_read",
+        "action_taken",
+        "section_timestamps",
+        "created_on"
+    ],
+    "fields": [
+        {
+            "fieldname": "customer",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "in_standard_filter": 1,
+            "label": "Customer",
+            "options": "Customer",
+            "reqd": 1
+        },
+        {
+            "fetch_from": "customer.customer_name",
+            "fieldname": "customer_name",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Customer Name",
+            "read_only": 1
+        },
+        {
+            "fieldname": "alert_type",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "in_standard_filter": 1,
+            "label": "Alert Type",
+            "options": "\nDowngrade\nUpgrade\nLost\nRecovered"
+        },
+        {
+            "fieldname": "section_segments",
+            "fieldtype": "Section Break",
+            "label": "Segment Change"
+        },
+        {
+            "fieldname": "previous_segment",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Previous Segment"
+        },
+        {
+            "fieldname": "new_segment",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "New Segment"
+        },
+        {
+            "fieldname": "column_break_status",
+            "fieldtype": "Column Break"
+        },
+        {
+            "default": "0",
+            "fieldname": "is_read",
+            "fieldtype": "Check",
+            "label": "Is Read"
+        },
+        {
+            "fieldname": "action_taken",
+            "fieldtype": "Small Text",
+            "label": "Action Taken"
+        },
+        {
+            "fieldname": "section_timestamps",
+            "fieldtype": "Section Break"
+        },
+        {
+            "default": "Now",
+            "fieldname": "created_on",
+            "fieldtype": "Datetime",
+            "label": "Created On",
+            "read_only": 1
+        }
+    ],
+    "index_web_pages_for_search": 1,
+    "links": [],
+    "modified": "2025-01-20 17:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "Erfmpnext",
+    "name": "RFM Alert",
+    "naming_rule": "Expression",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "sort_field": "created_on",
+    "sort_order": "DESC",
+    "states": [],
+    "title_field": "customer_name",
+    "track_changes": 1
+}

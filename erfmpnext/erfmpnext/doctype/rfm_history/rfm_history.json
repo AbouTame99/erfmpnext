@@ -1,0 +1,98 @@
+{
+    "actions": [],
+    "autoname": "format:RFM-HIST-{customer}-{snapshot_date}",
+    "creation": "2025-01-20 17:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "customer",
+        "snapshot_date",
+        "section_scores",
+        "recency_score",
+        "frequency_score",
+        "monetary_score",
+        "column_break_segment",
+        "segment",
+        "rfm_score"
+    ],
+    "fields": [
+        {
+            "fieldname": "customer",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "in_standard_filter": 1,
+            "label": "Customer",
+            "options": "Customer",
+            "reqd": 1
+        },
+        {
+            "fieldname": "snapshot_date",
+            "fieldtype": "Date",
+            "in_list_view": 1,
+            "in_standard_filter": 1,
+            "label": "Snapshot Date",
+            "reqd": 1
+        },
+        {
+            "fieldname": "section_scores",
+            "fieldtype": "Section Break",
+            "label": "Scores"
+        },
+        {
+            "fieldname": "recency_score",
+            "fieldtype": "Int",
+            "in_list_view": 1,
+            "label": "Recency (R)"
+        },
+        {
+            "fieldname": "frequency_score",
+            "fieldtype": "Int",
+            "in_list_view": 1,
+            "label": "Frequency (F)"
+        },
+        {
+            "fieldname": "monetary_score",
+            "fieldtype": "Int",
+            "in_list_view": 1,
+            "label": "Monetary (M)"
+        },
+        {
+            "fieldname": "column_break_segment",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "segment",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Segment"
+        },
+        {
+            "fieldname": "rfm_score",
+            "fieldtype": "Data",
+            "label": "RFM Score"
+        }
+    ],
+    "index_web_pages_for_search": 1,
+    "links": [],
+    "modified": "2025-01-20 17:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "Erfmpnext",
+    "name": "RFM History",
+    "naming_rule": "Expression",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1
+        }
+    ],
+    "sort_field": "snapshot_date",
+    "sort_order": "DESC",
+    "states": [],
+    "track_changes": 0
+}

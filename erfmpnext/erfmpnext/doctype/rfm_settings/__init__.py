@@ -1,0 +1,1 @@
+# RFM Settings DocType
