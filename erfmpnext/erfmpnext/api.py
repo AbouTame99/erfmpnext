@@ -3,92 +3,100 @@
 
 import frappe
 from frappe import _
-from frappe.utils import nowdate, getdate, add_days, now_datetime
-
-# Segment definitions based on RFM scores
-SEGMENT_MAP = {
-    (5, 5, 5): "Champions",
-    (5, 5, 4): "Champions",
-    (5, 4, 5): "Champions",
-    (4, 5, 5): "Loyal",
-    (5, 5, 3): "Loyal",
-    (4, 5, 4): "Loyal",
-    (4, 4, 5): "Loyal",
-    (4, 4, 4): "Loyal",
-    (5, 4, 4): "Loyal",
-    (5, 3, 3): "Potential Loyalists",
-    (4, 3, 3): "Potential Loyalists",
-    (5, 2, 2): "Potential Loyalists",
-    (4, 2, 3): "Potential Loyalists",
-    (5, 1, 1): "New Customers",
-    (5, 1, 2): "New Customers",
-    (4, 1, 1): "New Customers",
-    (4, 2, 1): "Promising",
-    (3, 3, 3): "Need Attention",
-    (3, 3, 2): "Need Attention",
-    (3, 2, 3): "Need Attention",
-    (2, 3, 3): "About to Sleep",
-    (2, 2, 3): "About to Sleep",
-    (2, 3, 2): "About to Sleep",
-    (2, 5, 5): "At Risk",
-    (2, 5, 4): "At Risk",
-    (2, 4, 5): "At Risk",
-    (2, 4, 4): "At Risk",
-    (1, 5, 5): "Cant Lose",
-    (1, 5, 4): "Cant Lose",
-    (1, 4, 5): "Cant Lose",
-    (2, 2, 2): "Hibernating",
-    (2, 2, 1): "Hibernating",
-    (2, 1, 2): "Hibernating",
-    (1, 2, 2): "Hibernating",
-    (1, 1, 1): "Lost",
-    (1, 1, 2): "Lost",
-    (1, 2, 1): "Lost",
-}
+from frappe.utils import nowdate, getdate, add_days, now_datetime, flt
 
 
-def get_segment(r, f, m):
-    """Get segment name from RFM scores"""
-    key = (r, f, m)
-    if key in SEGMENT_MAP:
-        return SEGMENT_MAP[key]
-    
-    # Fallback logic for scores not in map
-    avg = (r + f + m) / 3
-    if avg >= 4:
-        return "Loyal"
-    elif avg >= 3:
-        return "Need Attention"
-    elif avg >= 2:
-        return "Hibernating"
+def get_score_from_thresholds(value, thresholds, reverse=False):
+    """
+    Get score 1-10 based on value and thresholds.
+    thresholds = list of 9 values for scores 10 down to 2
+    If reverse=True, higher value = higher score (for frequency/monetary)
+    If reverse=False, lower value = higher score (for recency/payment)
+    """
+    if reverse:
+        # Higher value = higher score (frequency, monetary)
+        for i, threshold in enumerate(thresholds):
+            if value >= threshold:
+                return 10 - i
+        return 1
     else:
-        return "Lost"
+        # Lower value = higher score (recency, payment days late)
+        for i, threshold in enumerate(thresholds):
+            if value <= threshold:
+                return 10 - i
+        return 1
 
 
-def get_segment_rank(segment):
-    """Get numeric rank for segment comparison (higher = better)"""
-    ranks = {
-        "Champions": 10,
-        "Loyal": 9,
-        "Potential Loyalists": 8,
-        "New Customers": 7,
-        "Promising": 6,
-        "Need Attention": 5,
-        "About to Sleep": 4,
-        "At Risk": 3,
-        "Cant Lose": 2,
-        "Hibernating": 1,
-        "Lost": 0
-    }
-    return ranks.get(segment, 5)
+def get_payment_terms_days(customer):
+    """Get credit days from customer's default payment terms template"""
+    payment_terms = frappe.db.get_value("Customer", customer, "payment_terms")
+    if not payment_terms:
+        return 0
+    
+    # Get the first row's credit days from the payment terms template
+    credit_days = frappe.db.get_value(
+        "Payment Terms Template Detail",
+        {"parent": payment_terms},
+        "credit_days"
+    )
+    return credit_days or 0
 
 
 @frappe.whitelist()
 def calculate_rfm_scores():
-    """Calculate RFM scores for all customers based on Sales Invoices"""
+    """Calculate RFMP scores for all customers based on Sales Invoices"""
     settings = frappe.get_single("RFM Settings")
     today = getdate(nowdate())
     period_start = add_days(today, -settings.analysis_period_days or -365)
+    
+    # Build threshold lists from settings
+    recency_thresholds = [
+        settings.recency_days_10 or 7,
+        settings.recency_days_9 or 14,
+        settings.recency_days_8 or 30,
+        settings.recency_days_7 or 45,
+        settings.recency_days_6 or 60,
+        settings.recency_days_5 or 90,
+        settings.recency_days_4 or 120,
+        settings.recency_days_3 or 180,
+        settings.recency_days_2 or 270,
+    ]
+    
+    frequency_thresholds = [
+        settings.frequency_orders_10 or 20,
+        settings.frequency_orders_9 or 15,
+        settings.frequency_orders_8 or 12,
+        settings.frequency_orders_7 or 10,
+        settings.frequency_orders_6 or 8,
+        settings.frequency_orders_5 or 6,
+        settings.frequency_orders_4 or 4,
+        settings.frequency_orders_3 or 3,
+        settings.frequency_orders_2 or 2,
+    ]
+    
+    monetary_thresholds = [
+        flt(settings.monetary_amount_10) or 100000,
+        flt(settings.monetary_amount_9) or 75000,
+        flt(settings.monetary_amount_8) or 50000,
+        flt(settings.monetary_amount_7) or 35000,
+        flt(settings.monetary_amount_6) or 25000,
+        flt(settings.monetary_amount_5) or 15000,
+        flt(settings.monetary_amount_4) or 10000,
+        flt(settings.monetary_amount_3) or 5000,
+        flt(settings.monetary_amount_2) or 2000,
+    ]
+    
+    payment_thresholds = [
+        settings.payment_days_10 if settings.payment_days_10 is not None else -7,
+        settings.payment_days_9 if settings.payment_days_9 is not None else 0,
+        settings.payment_days_8 if settings.payment_days_8 is not None else 7,
+        settings.payment_days_7 if settings.payment_days_7 is not None else 15,
+        settings.payment_days_6 if settings.payment_days_6 is not None else 30,
+        settings.payment_days_5 if settings.payment_days_5 is not None else 45,
+        settings.payment_days_4 if settings.payment_days_4 is not None else 60,
+        settings.payment_days_3 if settings.payment_days_3 is not None else 75,
+        settings.payment_days_2 if settings.payment_days_2 is not None else 90,
+    ]
     
     # Get all customers with their invoice data
     customer_data = frappe.db.sql("""
@@ -115,54 +123,62 @@ def calculate_rfm_scores():
             days_since = 9999  # Never purchased
         
         # Calculate R score
-        r_score = calculate_r_score(days_since, settings)
+        r_score = get_score_from_thresholds(days_since, recency_thresholds, reverse=False)
         
         # Calculate F score
-        f_score = calculate_f_score(cust.total_orders or 0, settings)
+        f_score = get_score_from_thresholds(cust.total_orders or 0, frequency_thresholds, reverse=True)
         
         # Calculate M score
-        m_score = calculate_m_score(cust.total_spent or 0, settings)
+        m_score = get_score_from_thresholds(flt(cust.total_spent) or 0, monetary_thresholds, reverse=True)
         
-        # Get segment
-        segment = get_segment(r_score, f_score, m_score)
+        # Calculate Payment score
+        payment_data = calculate_payment_stats(cust.customer, period_start)
+        p_score = get_score_from_thresholds(payment_data['avg_days_late'], payment_thresholds, reverse=False)
+        
+        # Calculate totals
+        total_score = r_score + f_score + m_score + p_score
+        average_score = round(total_score / 4, 1)
         
         # Get or create Customer RFM Score record
         existing = frappe.db.exists("Customer RFM Score", cust.customer)
         
         if existing:
             doc = frappe.get_doc("Customer RFM Score", cust.customer)
-            old_segment = doc.segment
+            old_average = doc.average_score or 0
         else:
             doc = frappe.new_doc("Customer RFM Score")
             doc.customer = cust.customer
-            old_segment = None
+            old_average = 0
         
         # Update scores
         doc.recency_score = r_score
         doc.frequency_score = f_score
         doc.monetary_score = m_score
-        doc.segment = segment
+        doc.payment_score = p_score
+        doc.total_score = total_score
+        doc.average_score = average_score
         doc.last_purchase_date = cust.last_purchase_date
         doc.days_since_purchase = days_since if days_since < 9999 else None
         doc.total_orders = cust.total_orders or 0
         doc.total_spent = cust.total_spent or 0
+        doc.payment_terms_days = payment_data['payment_terms_days']
+        doc.avg_days_to_pay = payment_data['avg_days_to_pay']
+        doc.avg_days_late = payment_data['avg_days_late']
+        doc.on_time_payments = payment_data['on_time_payments']
+        doc.late_payments = payment_data['late_payments']
         doc.last_calculated = now_datetime()
         
-        # Check for segment change
-        if old_segment and old_segment != segment:
-            doc.previous_segment = old_segment
-            doc.segment_changed_on = today
+        # Check for significant score change
+        if old_average and abs(old_average - average_score) >= 1:
+            doc.previous_average = old_average
+            doc.score_changed_on = today
             
             # Create alert if enabled
-            if settings.alert_on_downgrade:
-                old_rank = get_segment_rank(old_segment)
-                new_rank = get_segment_rank(segment)
-                
-                if new_rank < old_rank:
-                    create_alert(cust.customer, "Downgrade", old_segment, segment)
-                    results["alerts_created"] += 1
-                elif new_rank > old_rank:
-                    create_alert(cust.customer, "Upgrade", old_segment, segment)
+            if settings.alert_on_downgrade and average_score < old_average:
+                create_alert(cust.customer, "Downgrade", f"{old_average}", f"{average_score}")
+                results["alerts_created"] += 1
+            elif average_score > old_average:
+                create_alert(cust.customer, "Upgrade", f"{old_average}", f"{average_score}")
         
         doc.save(ignore_permissions=True)
         results["processed"] += 1
@@ -171,55 +187,67 @@ def calculate_rfm_scores():
     return results
 
 
-def calculate_r_score(days_since, settings):
-    """Calculate Recency score based on days since last purchase"""
-    if days_since <= (settings.recency_days_5 or 30):
-        return 5
-    elif days_since <= (settings.recency_days_4 or 60):
-        return 4
-    elif days_since <= (settings.recency_days_3 or 90):
-        return 3
-    elif days_since <= (settings.recency_days_2 or 180):
-        return 2
-    else:
-        return 1
+def calculate_payment_stats(customer, period_start):
+    """Calculate payment behavior statistics for a customer"""
+    payment_terms_days = get_payment_terms_days(customer)
+    
+    # Get paid invoices with payment dates
+    invoices = frappe.db.sql("""
+        SELECT 
+            si.posting_date,
+            si.grand_total,
+            pe.posting_date as payment_date
+        FROM `tabSales Invoice` si
+        INNER JOIN `tabPayment Entry Reference` per ON per.reference_name = si.name
+        INNER JOIN `tabPayment Entry` pe ON pe.name = per.parent AND pe.docstatus = 1
+        WHERE si.customer = %s 
+            AND si.docstatus = 1 
+            AND si.posting_date >= %s
+    """, (customer, period_start), as_dict=True)
+    
+    if not invoices:
+        return {
+            'payment_terms_days': payment_terms_days,
+            'avg_days_to_pay': 0,
+            'avg_days_late': 0,
+            'on_time_payments': 0,
+            'late_payments': 0
+        }
+    
+    total_days_to_pay = 0
+    total_days_late = 0
+    on_time = 0
+    late = 0
+    
+    for inv in invoices:
+        days_to_pay = (getdate(inv.payment_date) - getdate(inv.posting_date)).days
+        days_late = days_to_pay - payment_terms_days
+        
+        total_days_to_pay += days_to_pay
+        total_days_late += days_late
+        
+        if days_late <= 0:
+            on_time += 1
+        else:
+            late += 1
+    
+    count = len(invoices)
+    return {
+        'payment_terms_days': payment_terms_days,
+        'avg_days_to_pay': round(total_days_to_pay / count, 1) if count else 0,
+        'avg_days_late': round(total_days_late / count, 1) if count else 0,
+        'on_time_payments': on_time,
+        'late_payments': late
+    }
 
 
-def calculate_f_score(total_orders, settings):
-    """Calculate Frequency score based on number of orders"""
-    if total_orders >= (settings.frequency_orders_5 or 10):
-        return 5
-    elif total_orders >= (settings.frequency_orders_4 or 7):
-        return 4
-    elif total_orders >= (settings.frequency_orders_3 or 4):
-        return 3
-    elif total_orders >= (settings.frequency_orders_2 or 2):
-        return 2
-    else:
-        return 1
-
-
-def calculate_m_score(total_spent, settings):
-    """Calculate Monetary score based on total spend"""
-    if total_spent >= (settings.monetary_amount_5 or 50000):
-        return 5
-    elif total_spent >= (settings.monetary_amount_4 or 25000):
-        return 4
-    elif total_spent >= (settings.monetary_amount_3 or 10000):
-        return 3
-    elif total_spent >= (settings.monetary_amount_2 or 5000):
-        return 2
-    else:
-        return 1
-
-
-def create_alert(customer, alert_type, old_segment, new_segment):
+def create_alert(customer, alert_type, old_score, new_score):
     """Create an RFM Alert record"""
     alert = frappe.new_doc("RFM Alert")
     alert.customer = customer
     alert.alert_type = alert_type
-    alert.previous_segment = old_segment
-    alert.new_segment = new_segment
+    alert.previous_segment = old_score
+    alert.new_segment = new_score
     alert.created_on = now_datetime()
     alert.insert(ignore_permissions=True)
 
@@ -230,7 +258,7 @@ def create_history_snapshot():
     today = nowdate()
     
     scores = frappe.get_all("Customer RFM Score", 
-        fields=["customer", "recency_score", "frequency_score", "monetary_score", "segment", "rfm_score"]
+        fields=["customer", "recency_score", "frequency_score", "monetary_score", "payment_score", "average_score"]
     )
     
     for score in scores:
@@ -247,8 +275,8 @@ def create_history_snapshot():
             history.recency_score = score.recency_score
             history.frequency_score = score.frequency_score
             history.monetary_score = score.monetary_score
-            history.segment = score.segment
-            history.rfm_score = score.rfm_score
+            history.segment = str(score.average_score)  # Store average as segment
+            history.rfm_score = f"R{score.recency_score}-F{score.frequency_score}-M{score.monetary_score}-P{score.payment_score or 0}"
             history.insert(ignore_permissions=True)
     
     frappe.db.commit()
@@ -257,13 +285,29 @@ def create_history_snapshot():
 
 @frappe.whitelist()
 def get_segment_distribution():
-    """Get count of customers in each segment"""
+    """Get count of customers by average score ranges"""
     data = frappe.db.sql("""
-        SELECT segment, COUNT(*) as count
+        SELECT 
+            CASE 
+                WHEN average_score >= 9 THEN 'Excellent (9-10)'
+                WHEN average_score >= 7 THEN 'Good (7-8.9)'
+                WHEN average_score >= 5 THEN 'Average (5-6.9)'
+                WHEN average_score >= 3 THEN 'Below Average (3-4.9)'
+                ELSE 'Poor (1-2.9)'
+            END as segment,
+            COUNT(*) as count,
+            ROUND(AVG(average_score), 1) as avg_score
         FROM `tabCustomer RFM Score`
-        WHERE segment IS NOT NULL AND segment != ''
-        GROUP BY segment
-        ORDER BY count DESC
+        WHERE average_score IS NOT NULL
+        GROUP BY 
+            CASE 
+                WHEN average_score >= 9 THEN 'Excellent (9-10)'
+                WHEN average_score >= 7 THEN 'Good (7-8.9)'
+                WHEN average_score >= 5 THEN 'Average (5-6.9)'
+                WHEN average_score >= 3 THEN 'Below Average (3-4.9)'
+                ELSE 'Poor (1-2.9)'
+            END
+        ORDER BY avg_score DESC
     """, as_dict=True)
     
     return data

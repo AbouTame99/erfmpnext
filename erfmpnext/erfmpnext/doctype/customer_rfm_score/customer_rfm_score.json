@@ -11,17 +11,25 @@
         "recency_score",
         "frequency_score",
         "monetary_score",
-        "rfm_score",
-        "column_break_segment",
-        "segment",
-        "previous_segment",
-        "segment_changed_on",
+        "payment_score",
+        "column_break_total",
+        "total_score",
+        "average_score",
+        "previous_average",
+        "score_changed_on",
         "section_stats",
         "last_purchase_date",
         "days_since_purchase",
         "column_break_stats2",
         "total_orders",
         "total_spent",
+        "section_payment_stats",
+        "payment_terms_days",
+        "avg_days_to_pay",
+        "avg_days_late",
+        "column_break_payment_stats",
+        "on_time_payments",
+        "late_payments",
         "section_calculated",
         "last_calculated"
     ],
@@ -47,54 +55,67 @@
         {
             "fieldname": "section_scores",
             "fieldtype": "Section Break",
-            "label": "RFM Scores"
+            "label": "RFMP Scores (1-10)"
         },
         {
+            "description": "Recency: How recently they purchased",
             "fieldname": "recency_score",
             "fieldtype": "Int",
             "in_list_view": 1,
-            "label": "Recency (R)"
+            "label": "R (Recency)"
         },
         {
+            "description": "Frequency: How often they purchase",
             "fieldname": "frequency_score",
             "fieldtype": "Int",
             "in_list_view": 1,
-            "label": "Frequency (F)"
+            "label": "F (Frequency)"
         },
         {
+            "description": "Monetary: How much they spend",
             "fieldname": "monetary_score",
             "fieldtype": "Int",
             "in_list_view": 1,
-            "label": "Monetary (M)"
+            "label": "M (Monetary)"
         },
         {
-            "fieldname": "rfm_score",
-            "fieldtype": "Data",
-            "label": "RFM Score",
-            "read_only": 1
+            "description": "Payment: How quickly they pay",
+            "fieldname": "payment_score",
+            "fieldtype": "Int",
+            "in_list_view": 1,
+            "label": "P (Payment)"
         },
         {
-            "fieldname": "column_break_segment",
+            "fieldname": "column_break_total",
             "fieldtype": "Column Break"
         },
         {
-            "fieldname": "segment",
-            "fieldtype": "Select",
-            "in_list_view": 1,
-            "in_standard_filter": 1,
-            "label": "Segment",
-            "options": "\nChampions\nLoyal\nPotential Loyalists\nNew Customers\nPromising\nNeed Attention\nAbout to Sleep\nAt Risk\nCant Lose\nHibernating\nLost"
-        },
-        {
-            "fieldname": "previous_segment",
-            "fieldtype": "Data",
-            "label": "Previous Segment",
+            "description": "Sum of R + F + M + P (max 40)",
+            "fieldname": "total_score",
+            "fieldtype": "Int",
+            "label": "Total Score",
             "read_only": 1
         },
         {
-            "fieldname": "segment_changed_on",
+            "description": "Average of R, F, M, P (1-10 scale)",
+            "fieldname": "average_score",
+            "fieldtype": "Float",
+            "in_list_view": 1,
+            "label": "Average Score",
+            "precision": "1",
+            "read_only": 1
+        },
+        {
+            "fieldname": "previous_average",
+            "fieldtype": "Float",
+            "label": "Previous Average",
+            "precision": "1",
+            "read_only": 1
+        },
+        {
+            "fieldname": "score_changed_on",
             "fieldtype": "Date",
-            "label": "Segment Changed On",
+            "label": "Score Changed On",
             "read_only": 1
         },
         {
@@ -131,6 +152,50 @@
             "read_only": 1
         },
         {
+            "fieldname": "section_payment_stats",
+            "fieldtype": "Section Break",
+            "label": "Payment Statistics"
+        },
+        {
+            "description": "From customer's default Payment Terms Template",
+            "fieldname": "payment_terms_days",
+            "fieldtype": "Int",
+            "label": "Payment Terms (Days)",
+            "read_only": 1
+        },
+        {
+            "description": "Average days from invoice to payment",
+            "fieldname": "avg_days_to_pay",
+            "fieldtype": "Float",
+            "label": "Avg Days to Pay",
+            "precision": "1",
+            "read_only": 1
+        },
+        {
+            "description": "Average days late (negative = early)",
+            "fieldname": "avg_days_late",
+            "fieldtype": "Float",
+            "label": "Avg Days Late",
+            "precision": "1",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_payment_stats",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "on_time_payments",
+            "fieldtype": "Int",
+            "label": "On-Time Payments",
+            "read_only": 1
+        },
+        {
+            "fieldname": "late_payments",
+            "fieldtype": "Int",
+            "label": "Late Payments",
+            "read_only": 1
+        },
+        {
             "fieldname": "section_calculated",
             "fieldtype": "Section Break"
         },
@@ -143,7 +208,7 @@
     ],
     "index_web_pages_for_search": 1,
     "links": [],
-    "modified": "2025-01-20 17:00:00.000000",
+    "modified": "2025-01-20 18:00:00.000000",
     "modified_by": "Administrator",
     "module": "Erfmpnext",
     "name": "Customer RFM Score",
@@ -163,7 +228,7 @@
             "write": 1
         }
     ],
-    "sort_field": "modified",
+    "sort_field": "average_score",
     "sort_order": "DESC",
     "states": [],
     "title_field": "customer_name",
