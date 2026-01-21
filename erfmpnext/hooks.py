@@ -148,10 +148,12 @@ add_to_apps_screen = [
 # ---------------
 
 scheduler_events = {
-	"daily": [
-		"erfmpnext.erfmpnext.api.calculate_rfm_scores",
-		"erfmpnext.erfmpnext.api.create_history_snapshot"
-	],
+	"cron": {
+		"0 8 * * *": [
+			"erfmpnext.erfmpnext.api.calculate_rfm_scores",
+			"erfmpnext.erfmpnext.api.create_history_snapshot"
+		]
+	}
 }
 
 # Testing

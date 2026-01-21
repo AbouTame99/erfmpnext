@@ -160,8 +160,8 @@ function load_dashboard(page) {
     // Load customers table
     load_customers_table();
 
-    // Filter change handler
-    $('#score-filter').on('change', function () {
+    // Filter change handler (attached to wrapper to ensure it persists if inner HTML changes)
+    $(page.wrapper).on('change', '#score-filter', function () {
         load_customers_table($(this).val());
     });
 }
@@ -230,7 +230,7 @@ function load_customers_table(min_score) {
     `);
 
     let filters = [];
-    if (min_score) {
+    if (min_score !== undefined && min_score !== null && min_score !== "") {
         filters.push(["average_score", ">=", parseFloat(min_score)]);
     }
 
