@@ -72,13 +72,41 @@ function load_dashboard(page) {
                             <div class="d-flex gap-2">
                                 <select id="score-filter" class="form-control" style="width: 150px;">
                                     <option value="">All Scores</option>
-                                    <option value="4.5">5 (Diamond)</option>
-                                    <option value="3.5">4 (Gold)</option>
-                                    <option value="2.5">3 (Silver)</option>
-                                    <option value="1.5">2 (Bronze)</option>
-                                    <option value="0">1 (Standard)</option>
+                                    <option value="5">5 (Diamond)</option>
+                                    <option value="4">4 (Gold)</option>
+                                    <option value="3">3 (Silver)</option>
+                                    <option value="2">2 (Bronze)</option>
+                                    <option value="1">1 (Standard)</option>
                                 </select>
                             </div>
+// ... existing code ...
+function load_customers_table(segment) {
+    // Show Loading State
+    $('#customers-table').html(`
+        < div class= "text-center p-5" >
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted">Loading customer data...</p>
+        </div >
+        `);
+
+    let filters = [];
+    if (segment) {
+        segment = parseInt(segment);
+        if (segment === 5) {
+            filters.push(["average_score", ">=", 4.5]);
+        } else if (segment === 4) {
+            filters.push(["average_score", ">=", 3.5]);
+            filters.push(["average_score", "<", 4.5]);
+        } else if (segment === 3) {
+            filters.push(["average_score", ">=", 2.5]);
+            filters.push(["average_score", "<", 3.5]);
+        } else if (segment === 2) {
+            filters.push(["average_score", ">=", 1.5]);
+            filters.push(["average_score", "<", 2.5]);
+        } else if (segment === 1) {
+            filters.push(["average_score", "<", 1.5]);
+        }
+    }
                         </div>
                         <div class="card-body">
                             <div id="customers-table"></div>
@@ -220,7 +248,7 @@ function render_alerts(alerts) {
     $('#alerts-list').html(html);
 }
 
-function load_customers_table(min_score) {
+function load_customers_table(segment) {
     // Show Loading State
     $('#customers-table').html(`
         <div class="text-center p-5">
@@ -230,8 +258,22 @@ function load_customers_table(min_score) {
     `);
 
     let filters = [];
-    if (min_score !== undefined && min_score !== null && min_score !== "") {
-        filters.push(["average_score", ">=", parseFloat(min_score)]);
+    if (segment) {
+        segment = parseInt(segment);
+        if (segment === 5) {
+            filters.push(["average_score", ">=", 4.5]);
+        } else if (segment === 4) {
+            filters.push(["average_score", ">=", 3.5]);
+            filters.push(["average_score", "<", 4.5]);
+        } else if (segment === 3) {
+            filters.push(["average_score", ">=", 2.5]);
+            filters.push(["average_score", "<", 3.5]);
+        } else if (segment === 2) {
+            filters.push(["average_score", ">=", 1.5]);
+            filters.push(["average_score", "<", 2.5]);
+        } else if (segment === 1) {
+            filters.push(["average_score", "<", 1.5]);
+        }
     }
 
     frappe.call({
