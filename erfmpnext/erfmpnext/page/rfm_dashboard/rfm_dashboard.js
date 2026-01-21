@@ -20,6 +20,13 @@ frappe.pages['rfm-dashboard'].on_page_load = function (wrapper) {
                     });
                     load_dashboard(page);
                 }
+            },
+            error: function (r) {
+                frappe.msgprint({
+                    title: 'Calculation Error',
+                    message: JSON.stringify(r),
+                    indicator: 'red'
+                });
             }
         });
     });
@@ -212,6 +219,14 @@ function render_alerts(alerts) {
 }
 
 function load_customers_table(min_score) {
+    // Show Loading State
+    $('#customers-table').html(`
+        <div class="text-center p-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted">Loading customer data...</p>
+        </div>
+    `);
+
     let filters = [];
     if (min_score) {
         filters.push(["average_score", ">=", parseFloat(min_score)]);
@@ -222,65 +237,80 @@ function load_customers_table(min_score) {
         args: {
             doctype: 'Customer RFM Score',
             filters: filters,
-            fields: ['customer', 'customer_name', 'recency_score', 'frequency_score', 'monetary_score', 'payment_score', 'average_score', 'total_spent', 'total_orders', 'days_since_purchase', 'avg_days_late'],
+            fields: ['name', 'customer', 'customer_name', 'recency_score', 'frequency_score', 'monetary_score', 'payment_score', 'average_score', 'total_spent', 'total_orders', 'days_since_purchase', 'avg_days_late'],
             order_by: 'average_score desc',
             limit_page_length: 50
         },
         callback: function (r) {
-            if (r.message && r.message.length) {
-                let html = `
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Customer</th>
-                                <th>R</th>
-                                <th>F</th>
-                                <th>M</th>
-                                <th>P</th>
-                                <th>Avg</th>
-                                <th>Total Spent</th>
-                                <th>Orders</th>
-                                <th>Days Late</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-                r.message.forEach(c => {
-                    const avgClass = c.average_score >= 7 ? 'score-excellent' :
-                        c.average_score >= 5 ? 'score-good' :
-                            c.average_score >= 3 ? 'score-average' : 'score-poor';
-                    html += `
-                        <tr style="cursor: pointer;" onclick="frappe.set_route('Form', 'Customer RFM Score', '${c.customer}')">
-                            <td><strong>${c.customer_name || c.customer}</strong></td>
-                            <td><span class="score-badge ${get_score_class(c.recency_score)}">${c.recency_score || '-'}</span></td>
-                            <td><span class="score-badge ${get_score_class(c.frequency_score)}">${c.frequency_score || '-'}</span></td>
-                            <td><span class="score-badge ${get_score_class(c.monetary_score)}">${c.monetary_score || '-'}</span></td>
-                            <td><span class="score-badge ${get_score_class(c.payment_score)}">${c.payment_score || '-'}</span></td>
-                            <td><span class="avg-score ${avgClass}">${(c.average_score || 0).toFixed(1)}</span></td>
-                            <td>${format_currency(c.total_spent || 0)}</td>
-                            <td>${c.total_orders || 0}</td>
-                            <td>${c.avg_days_late != null ? (c.avg_days_late > 0 ? '+' : '') + c.avg_days_late.toFixed(0) + 'd' : '-'}</td>
-                        </tr>
+            try {
+                if (r.message && r.message.length) {
+                    let html = `
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>R</th>
+                                    <th>F</th>
+                                    <th>M</th>
+                                    <th>P</th>
+                                    <th>Avg</th>
+                                    <th>Total Spent</th>
+                                    <th>Orders</th>
+                                    <th>Days Late</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                     `;
-                });
-                html += '</tbody></table>';
-                $('#customers-table').html(html);
-            } else {
-                $('#customers-table').html(`
-                    <div class="text-center p-4">
-                        <p class="text-muted">No customers found.</p>
-                        <button class="btn btn-primary btn-sm" onclick="frappe.pages['rfm-dashboard'].get_primary_btn().trigger('click')">
-                            Calculate Scores Now
-                        </button>
-                    </div>
-                `);
+                    r.message.forEach(c => {
+                        const avgClass = c.average_score >= 7 ? 'score-excellent' :
+                            c.average_score >= 5 ? 'score-good' :
+                                c.average_score >= 3 ? 'score-average' : 'score-poor';
+                        html += `
+                            <tr style="cursor: pointer;" onclick="frappe.set_route('Form', 'Customer RFM Score', '${c.name || c.customer}')">
+                                <td><strong>${c.customer_name || c.customer}</strong></td>
+                                <td><span class="score-badge ${get_score_class(c.recency_score)}">${c.recency_score || '-'}</span></td>
+                                <td><span class="score-badge ${get_score_class(c.frequency_score)}">${c.frequency_score || '-'}</span></td>
+                                <td><span class="score-badge ${get_score_class(c.monetary_score)}">${c.monetary_score || '-'}</span></td>
+                                <td><span class="score-badge ${get_score_class(c.payment_score)}">${c.payment_score || '-'}</span></td>
+                                <td><span class="avg-score ${avgClass}">${(c.average_score || 0).toFixed(1)}</span></td>
+                                <td>${format_currency(c.total_spent || 0)}</td>
+                                <td>${c.total_orders || 0}</td>
+                                <td>${c.avg_days_late != null ? (c.avg_days_late > 0 ? '+' : '') + c.avg_days_late.toFixed(0) + 'd' : '-'}</td>
+                            </tr>
+                        `;
+                    });
+                    html += '</tbody></table>';
+                    $('#customers-table').html(html);
+                } else {
+                    $('#customers-table').html(`
+                        <div class="text-center p-4">
+                            <p class="text-muted">No customers found matching filter.</p>
+                            <button class="btn btn-primary btn-sm" onclick="frappe.pages['rfm-dashboard'].get_primary_btn().trigger('click')">
+                                Calculate Scores Now
+                            </button>
+                        </div>
+                    `);
+                }
+            } catch (e) {
+                console.error(e);
+                $('#customers-table').html(`<div class="alert alert-danger">JS Error: ${e.message}</div>`);
             }
         },
         error: function (r) {
+            console.log(r);
+            let msg = 'Unknown error';
+            try {
+                if (r.message) msg = JSON.stringify(r.message);
+                if (r.exc) msg += '<br>' + r.exc;
+            } catch (e) { msg = r; }
+
             $('#customers-table').html(`
                 <div class="alert alert-danger">
-                    <strong>Error loading data:</strong> It looks like the database schema hasn't been updated.<br>
-                    Please run: <code>bench migrate</code> in your console.
+                    <strong>Data Load Error:</strong><br>
+                    It seems the database is not updated.<br>
+                    <small style="font-size: 10px; font-family: monospace;">${msg}</small><br>
+                    <hr>
+                    <strong>Fix:</strong> Run <code>bench migrate</code> on your server.
                 </div>
             `);
         }
