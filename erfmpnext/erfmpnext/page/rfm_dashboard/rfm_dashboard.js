@@ -325,5 +325,10 @@ function get_score_class(score) {
 }
 
 function format_currency(value) {
-    return frappe.format(value, { fieldtype: 'Currency' });
+    try {
+        let currency = frappe.boot.sysdefaults.currency || 'USD';
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(value);
+    } catch (e) {
+        return (value || 0).toFixed(2);
+    }
 }
