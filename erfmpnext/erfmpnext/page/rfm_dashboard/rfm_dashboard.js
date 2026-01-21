@@ -46,7 +46,7 @@ function load_dashboard(page) {
                 <div class="col-md-6">
                     <div class="card mb-4">
                         <div class="card-header">
-                            <h5 class="mb-0">📊 Score Distribution</h5>
+                            <h5 class="mb-0">📊 Score Distribution (1-5 Scale)</h5>
                         </div>
                         <div class="card-body">
                             <div id="segment-chart" style="min-height: 250px;"></div>
@@ -72,10 +72,11 @@ function load_dashboard(page) {
                             <div class="d-flex gap-2">
                                 <select id="score-filter" class="form-control" style="width: 150px;">
                                     <option value="">All Scores</option>
-                                    <option value="9">9+ (Excellent)</option>
-                                    <option value="7">7+ (Good)</option>
-                                    <option value="5">5+ (Average)</option>
-                                    <option value="3">3+ (Below Avg)</option>
+                                    <option value="4.5">5 (Diamond)</option>
+                                    <option value="3.5">4 (Gold)</option>
+                                    <option value="2.5">3 (Silver)</option>
+                                    <option value="1.5">2 (Bronze)</option>
+                                    <option value="0">1 (Standard)</option>
                                 </select>
                             </div>
                         </div>
@@ -111,10 +112,11 @@ function load_dashboard(page) {
                 font-weight: bold;
                 font-size: 12px;
             }
-            .score-excellent { background: #10b981; color: white; }
-            .score-good { background: #3b82f6; color: white; }
-            .score-average { background: #f59e0b; color: white; }
-            .score-poor { background: #ef4444; color: white; }
+            .score-diamond { background: #10b981; color: white; }
+            .score-gold { background: #f59e0b; color: white; }
+            .score-silver { background: #9ca3af; color: white; }
+            .score-bronze { background: #b45309; color: white; }
+            .score-standard { background: #ef4444; color: white; }
             .alert-item {
                 padding: 12px;
                 border-bottom: 1px solid #eee;
@@ -166,11 +168,11 @@ function load_dashboard(page) {
 
 function render_segment_chart(data) {
     const colors = {
-        'Excellent (9-10)': '#10b981',
-        'Good (7-8.9)': '#3b82f6',
-        'Average (5-6.9)': '#f59e0b',
-        'Below Average (3-4.9)': '#f97316',
-        'Poor (1-2.9)': '#ef4444'
+        'Diamond (5)': '#10b981',
+        'Gold (4)': '#f59e0b',
+        'Silver (3)': '#9ca3af',
+        'Bronze (2)': '#b45309',
+        'Standard (1)': '#ef4444'
     };
 
     let html = '<div class="segment-bars">';
@@ -262,16 +264,14 @@ function load_customers_table(min_score) {
                             <tbody>
                     `;
                     r.message.forEach(c => {
-                        const avgClass = c.average_score >= 7 ? 'score-excellent' :
-                            c.average_score >= 5 ? 'score-good' :
-                                c.average_score >= 3 ? 'score-average' : 'score-poor';
+                        const avgClass = get_score_class(c.average_score);
                         html += `
                             <tr style="cursor: pointer;" onclick="frappe.set_route('Form', 'Customer RFM Score', '${c.name || c.customer}')">
                                 <td><strong>${c.customer_name || c.customer}</strong></td>
-                                <td><span class="score-badge ${get_score_class(c.recency_score)}">${c.recency_score || '-'}</span></td>
-                                <td><span class="score-badge ${get_score_class(c.frequency_score)}">${c.frequency_score || '-'}</span></td>
-                                <td><span class="score-badge ${get_score_class(c.monetary_score)}">${c.monetary_score || '-'}</span></td>
-                                <td><span class="score-badge ${get_score_class(c.payment_score)}">${c.payment_score || '-'}</span></td>
+                                <td><span class="score-badge ${get_score_badge_class(c.recency_score)}">${c.recency_score || '-'}</span></td>
+                                <td><span class="score-badge ${get_score_badge_class(c.frequency_score)}">${c.frequency_score || '-'}</span></td>
+                                <td><span class="score-badge ${get_score_badge_class(c.monetary_score)}">${c.monetary_score || '-'}</span></td>
+                                <td><span class="score-badge ${get_score_badge_class(c.payment_score)}">${c.payment_score || '-'}</span></td>
                                 <td><span class="avg-score ${avgClass}">${(c.average_score || 0).toFixed(1)}</span></td>
                                 <td>${format_currency(c.total_spent || 0)}</td>
                                 <td>${c.total_orders || 0}</td>
@@ -318,10 +318,19 @@ function load_customers_table(min_score) {
 }
 
 function get_score_class(score) {
-    if (score >= 8) return 'score-excellent';
-    if (score >= 5) return 'score-good';
-    if (score >= 3) return 'score-average';
-    return 'score-poor';
+    if (score >= 4.5) return 'score-diamond';
+    if (score >= 3.5) return 'score-gold';
+    if (score >= 2.5) return 'score-silver';
+    if (score >= 1.5) return 'score-bronze';
+    return 'score-standard';
+}
+
+function get_score_badge_class(score) {
+    if (score >= 5) return 'score-diamond';
+    if (score >= 4) return 'score-gold';
+    if (score >= 3) return 'score-silver';
+    if (score >= 2) return 'score-bronze';
+    return 'score-standard';
 }
 
 function format_currency(value) {

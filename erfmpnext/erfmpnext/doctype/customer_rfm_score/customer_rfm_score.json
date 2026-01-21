@@ -55,7 +55,7 @@
         {
             "fieldname": "section_scores",
             "fieldtype": "Section Break",
-            "label": "RFMP Scores (1-10)"
+            "label": "RFMP Scores (1-5)"
         },
         {
             "description": "Recency: How recently they purchased",
@@ -90,14 +90,14 @@
             "fieldtype": "Column Break"
         },
         {
-            "description": "Sum of R + F + M + P (max 40)",
+            "description": "Sum of R + F + M + P (max 20)",
             "fieldname": "total_score",
             "fieldtype": "Int",
             "label": "Total Score",
             "read_only": 1
         },
         {
-            "description": "Average of R, F, M, P (1-10 scale)",
+            "description": "Average of R, F, M, P (1-5 scale)",
             "fieldname": "average_score",
             "fieldtype": "Float",
             "in_list_view": 1,

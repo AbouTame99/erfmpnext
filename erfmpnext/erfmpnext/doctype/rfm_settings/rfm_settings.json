@@ -6,45 +6,21 @@
     "engine": "InnoDB",
     "field_order": [
         "section_recency",
-        "recency_days_10",
-        "recency_days_9",
-        "recency_days_8",
-        "recency_days_7",
-        "recency_days_6",
-        "column_break_recency",
         "recency_days_5",
         "recency_days_4",
         "recency_days_3",
         "recency_days_2",
         "section_frequency",
-        "frequency_orders_10",
-        "frequency_orders_9",
-        "frequency_orders_8",
-        "frequency_orders_7",
-        "frequency_orders_6",
-        "column_break_frequency",
         "frequency_orders_5",
         "frequency_orders_4",
         "frequency_orders_3",
         "frequency_orders_2",
         "section_monetary",
-        "monetary_amount_10",
-        "monetary_amount_9",
-        "monetary_amount_8",
-        "monetary_amount_7",
-        "monetary_amount_6",
-        "column_break_monetary",
         "monetary_amount_5",
         "monetary_amount_4",
         "monetary_amount_3",
         "monetary_amount_2",
         "section_payment",
-        "payment_days_10",
-        "payment_days_9",
-        "payment_days_8",
-        "payment_days_7",
-        "payment_days_6",
-        "column_break_payment",
         "payment_days_5",
         "payment_days_4",
         "payment_days_3",
@@ -63,60 +39,26 @@
             "label": "Recency (R) - Days Since Last Purchase"
         },
         {
-            "default": "7",
-            "description": "Score 10: Purchased within this many days",
-            "fieldname": "recency_days_10",
-            "fieldtype": "Int",
-            "label": "Score 10 (Days)"
-        },
-        {
-            "default": "14",
-            "fieldname": "recency_days_9",
-            "fieldtype": "Int",
-            "label": "Score 9 (Days)"
-        },
-        {
             "default": "30",
-            "fieldname": "recency_days_8",
-            "fieldtype": "Int",
-            "label": "Score 8 (Days)"
-        },
-        {
-            "default": "45",
-            "fieldname": "recency_days_7",
-            "fieldtype": "Int",
-            "label": "Score 7 (Days)"
-        },
-        {
-            "default": "60",
-            "fieldname": "recency_days_6",
-            "fieldtype": "Int",
-            "label": "Score 6 (Days)"
-        },
-        {
-            "fieldname": "column_break_recency",
-            "fieldtype": "Column Break"
-        },
-        {
-            "default": "90",
+            "description": "Score 5: Purchased within this many days",
             "fieldname": "recency_days_5",
             "fieldtype": "Int",
             "label": "Score 5 (Days)"
         },
         {
-            "default": "120",
+            "default": "60",
             "fieldname": "recency_days_4",
             "fieldtype": "Int",
             "label": "Score 4 (Days)"
         },
         {
-            "default": "180",
+            "default": "90",
             "fieldname": "recency_days_3",
             "fieldtype": "Int",
             "label": "Score 3 (Days)"
         },
         {
-            "default": "270",
+            "default": "180",
             "fieldname": "recency_days_2",
             "fieldtype": "Int",
             "label": "Score 2 (Days)"
@@ -127,48 +69,14 @@
             "label": "Frequency (F) - Number of Orders"
         },
         {
-            "default": "20",
-            "description": "Score 10: This many orders or more",
-            "fieldname": "frequency_orders_10",
-            "fieldtype": "Int",
-            "label": "Score 10 (Orders)"
-        },
-        {
-            "default": "15",
-            "fieldname": "frequency_orders_9",
-            "fieldtype": "Int",
-            "label": "Score 9 (Orders)"
-        },
-        {
-            "default": "12",
-            "fieldname": "frequency_orders_8",
-            "fieldtype": "Int",
-            "label": "Score 8 (Orders)"
-        },
-        {
             "default": "10",
-            "fieldname": "frequency_orders_7",
-            "fieldtype": "Int",
-            "label": "Score 7 (Orders)"
-        },
-        {
-            "default": "8",
-            "fieldname": "frequency_orders_6",
-            "fieldtype": "Int",
-            "label": "Score 6 (Orders)"
-        },
-        {
-            "fieldname": "column_break_frequency",
-            "fieldtype": "Column Break"
-        },
-        {
-            "default": "6",
+            "description": "Score 5: This many orders or more",
             "fieldname": "frequency_orders_5",
             "fieldtype": "Int",
             "label": "Score 5 (Orders)"
         },
         {
-            "default": "4",
+            "default": "5",
             "fieldname": "frequency_orders_4",
             "fieldtype": "Int",
             "label": "Score 4 (Orders)"
@@ -191,54 +99,20 @@
             "label": "Monetary (M) - Total Amount Spent"
         },
         {
-            "default": "100000",
-            "description": "Score 10: Spent this amount or more",
-            "fieldname": "monetary_amount_10",
-            "fieldtype": "Currency",
-            "label": "Score 10 (Amount)"
-        },
-        {
-            "default": "75000",
-            "fieldname": "monetary_amount_9",
-            "fieldtype": "Currency",
-            "label": "Score 9 (Amount)"
-        },
-        {
             "default": "50000",
-            "fieldname": "monetary_amount_8",
-            "fieldtype": "Currency",
-            "label": "Score 8 (Amount)"
-        },
-        {
-            "default": "35000",
-            "fieldname": "monetary_amount_7",
-            "fieldtype": "Currency",
-            "label": "Score 7 (Amount)"
-        },
-        {
-            "default": "25000",
-            "fieldname": "monetary_amount_6",
-            "fieldtype": "Currency",
-            "label": "Score 6 (Amount)"
-        },
-        {
-            "fieldname": "column_break_monetary",
-            "fieldtype": "Column Break"
-        },
-        {
-            "default": "15000",
+            "description": "Score 5: Spent this amount or more",
             "fieldname": "monetary_amount_5",
             "fieldtype": "Currency",
             "label": "Score 5 (Amount)"
         },
         {
-            "default": "10000",
+            "default": "25000",
             "fieldname": "monetary_amount_4",
             "fieldtype": "Currency",
             "label": "Score 4 (Amount)"
         },
         {
-            "default": "5000",
+            "default": "10000",
             "fieldname": "monetary_amount_3",
             "fieldtype": "Currency",
             "label": "Score 3 (Amount)"
@@ -256,60 +130,26 @@
         },
         {
             "default": "-7",
-            "description": "Score 10: Pays this many days early or more (negative = early)",
-            "fieldname": "payment_days_10",
-            "fieldtype": "Int",
-            "label": "Score 10 (Days)"
-        },
-        {
-            "default": "0",
-            "description": "Score 9: Pays on time or within this many days",
-            "fieldname": "payment_days_9",
-            "fieldtype": "Int",
-            "label": "Score 9 (Days)"
-        },
-        {
-            "default": "7",
-            "fieldname": "payment_days_8",
-            "fieldtype": "Int",
-            "label": "Score 8 (Days)"
-        },
-        {
-            "default": "15",
-            "fieldname": "payment_days_7",
-            "fieldtype": "Int",
-            "label": "Score 7 (Days)"
-        },
-        {
-            "default": "30",
-            "fieldname": "payment_days_6",
-            "fieldtype": "Int",
-            "label": "Score 6 (Days)"
-        },
-        {
-            "fieldname": "column_break_payment",
-            "fieldtype": "Column Break"
-        },
-        {
-            "default": "45",
+            "description": "Score 5: Pays this many days early or more (negative = early)",
             "fieldname": "payment_days_5",
             "fieldtype": "Int",
             "label": "Score 5 (Days)"
         },
         {
-            "default": "60",
+            "default": "7",
+            "description": "Score 4: Pays within this many days late",
             "fieldname": "payment_days_4",
             "fieldtype": "Int",
             "label": "Score 4 (Days)"
         },
         {
-            "default": "75",
+            "default": "30",
             "fieldname": "payment_days_3",
             "fieldtype": "Int",
             "label": "Score 3 (Days)"
         },
         {
-            "default": "90",
+            "default": "60",
             "fieldname": "payment_days_2",
             "fieldtype": "Int",
             "label": "Score 2 (Days)"

@@ -8,8 +8,8 @@ from frappe.utils import nowdate, getdate, add_days, now_datetime, flt
 
 def get_score_from_thresholds(value, thresholds, reverse=False):
     """
-    Get score 1-10 based on value and thresholds.
-    thresholds = list of 9 values for scores 10 down to 2
+    Get score 1-5 based on value and thresholds.
+    thresholds = list of 4 values for scores 5 down to 2
     If reverse=True, higher value = higher score (for frequency/monetary)
     If reverse=False, lower value = higher score (for recency/payment)
     """
@@ -17,13 +17,13 @@ def get_score_from_thresholds(value, thresholds, reverse=False):
         # Higher value = higher score (frequency, monetary)
         for i, threshold in enumerate(thresholds):
             if value >= threshold:
-                return 10 - i
+                return 5 - i
         return 1
     else:
         # Lower value = higher score (recency, payment days late)
         for i, threshold in enumerate(thresholds):
             if value <= threshold:
-                return 10 - i
+                return 5 - i
         return 1
 
 
@@ -49,53 +49,33 @@ def calculate_rfm_scores():
     today = getdate(nowdate())
     period_start = add_days(today, -settings.analysis_period_days or -365)
     
-    # Build threshold lists from settings
+    # Build threshold lists from settings (Only 4 thresholds needed for 1-5 scale)
     recency_thresholds = [
-        settings.recency_days_10 or 7,
-        settings.recency_days_9 or 14,
-        settings.recency_days_8 or 30,
-        settings.recency_days_7 or 45,
-        settings.recency_days_6 or 60,
-        settings.recency_days_5 or 90,
-        settings.recency_days_4 or 120,
-        settings.recency_days_3 or 180,
-        settings.recency_days_2 or 270,
+        settings.recency_days_5 or 30,
+        settings.recency_days_4 or 60,
+        settings.recency_days_3 or 90,
+        settings.recency_days_2 or 180,
     ]
     
     frequency_thresholds = [
-        settings.frequency_orders_10 or 20,
-        settings.frequency_orders_9 or 15,
-        settings.frequency_orders_8 or 12,
-        settings.frequency_orders_7 or 10,
-        settings.frequency_orders_6 or 8,
-        settings.frequency_orders_5 or 6,
-        settings.frequency_orders_4 or 4,
+        settings.frequency_orders_5 or 10,
+        settings.frequency_orders_4 or 5,
         settings.frequency_orders_3 or 3,
         settings.frequency_orders_2 or 2,
     ]
     
     monetary_thresholds = [
-        flt(settings.monetary_amount_10) or 100000,
-        flt(settings.monetary_amount_9) or 75000,
-        flt(settings.monetary_amount_8) or 50000,
-        flt(settings.monetary_amount_7) or 35000,
-        flt(settings.monetary_amount_6) or 25000,
-        flt(settings.monetary_amount_5) or 15000,
-        flt(settings.monetary_amount_4) or 10000,
-        flt(settings.monetary_amount_3) or 5000,
+        flt(settings.monetary_amount_5) or 50000,
+        flt(settings.monetary_amount_4) or 25000,
+        flt(settings.monetary_amount_3) or 10000,
         flt(settings.monetary_amount_2) or 2000,
     ]
     
     payment_thresholds = [
-        settings.payment_days_10 if settings.payment_days_10 is not None else -7,
-        settings.payment_days_9 if settings.payment_days_9 is not None else 0,
-        settings.payment_days_8 if settings.payment_days_8 is not None else 7,
-        settings.payment_days_7 if settings.payment_days_7 is not None else 15,
-        settings.payment_days_6 if settings.payment_days_6 is not None else 30,
-        settings.payment_days_5 if settings.payment_days_5 is not None else 45,
-        settings.payment_days_4 if settings.payment_days_4 is not None else 60,
-        settings.payment_days_3 if settings.payment_days_3 is not None else 75,
-        settings.payment_days_2 if settings.payment_days_2 is not None else 90,
+        settings.payment_days_5 if settings.payment_days_5 is not None else -7,
+        settings.payment_days_4 if settings.payment_days_4 is not None else 7,
+        settings.payment_days_3 if settings.payment_days_3 is not None else 30,
+        settings.payment_days_2 if settings.payment_days_2 is not None else 60,
     ]
     
     # Get all customers with their invoice data
@@ -169,7 +149,7 @@ def calculate_rfm_scores():
         doc.last_calculated = now_datetime()
         
         # Check for significant score change
-        if old_average and abs(old_average - average_score) >= 1:
+        if old_average and abs(old_average - average_score) >= 0.5: # More sensitive for small scale
             doc.previous_average = old_average
             doc.score_changed_on = today
             
@@ -285,15 +265,15 @@ def create_history_snapshot():
 
 @frappe.whitelist()
 def get_segment_distribution():
-    """Get count of customers by average score ranges"""
+    """Get count of customers by average score ranges (1-5 Scale)"""
     data = frappe.db.sql("""
         SELECT 
             CASE 
-                WHEN average_score >= 9 THEN 'Excellent (9-10)'
-                WHEN average_score >= 7 THEN 'Good (7-8.9)'
-                WHEN average_score >= 5 THEN 'Average (5-6.9)'
-                WHEN average_score >= 3 THEN 'Below Average (3-4.9)'
-                ELSE 'Poor (1-2.9)'
+                WHEN average_score >= 4.5 THEN 'Diamond (5)'
+                WHEN average_score >= 3.5 THEN 'Gold (4)'
+                WHEN average_score >= 2.5 THEN 'Silver (3)'
+                WHEN average_score >= 1.5 THEN 'Bronze (2)'
+                ELSE 'Standard (1)'
             END as segment,
             COUNT(*) as count,
             ROUND(AVG(average_score), 1) as avg_score
@@ -301,11 +281,11 @@ def get_segment_distribution():
         WHERE average_score IS NOT NULL
         GROUP BY 
             CASE 
-                WHEN average_score >= 9 THEN 'Excellent (9-10)'
-                WHEN average_score >= 7 THEN 'Good (7-8.9)'
-                WHEN average_score >= 5 THEN 'Average (5-6.9)'
-                WHEN average_score >= 3 THEN 'Below Average (3-4.9)'
-                ELSE 'Poor (1-2.9)'
+                WHEN average_score >= 4.5 THEN 'Diamond (5)'
+                WHEN average_score >= 3.5 THEN 'Gold (4)'
+                WHEN average_score >= 2.5 THEN 'Silver (3)'
+                WHEN average_score >= 1.5 THEN 'Bronze (2)'
+                ELSE 'Standard (1)'
             END
         ORDER BY avg_score DESC
     """, as_dict=True)
