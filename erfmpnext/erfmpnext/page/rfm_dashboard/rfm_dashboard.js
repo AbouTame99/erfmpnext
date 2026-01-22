@@ -189,25 +189,88 @@ function load_customers_table(segment) {
             filters.push(["average_score", "<", 1.5]);
         }
     }
-    padding: 15px 20px;
+    frappe.call({
+        method: 'frappe.client.get_list',
+        args: {
+            doctype: 'Customer RFM Score',
+            filters: filters,
+            fields: ['name', 'customer', 'customer_name', 'recency_score', 'frequency_score', 'monetary_score', 'payment_score', 'average_score', 'total_spent', 'total_orders', 'days_since_purchase', 'avg_days_late'],
+            order_by: 'average_score desc',
+            limit_page_length: 50
+        },
+        callback: function (r) {
+            try {
+                if (r.message && r.message.length) {
+                    let html = `<div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead style="background-color: #f8f9fa;">
+                                    <tr>
+                                        <th style="width: 25%">Customer</th>
+                                        <th class="text-center" style="width: 15%">Avg Score</th>
+                                        <th class="text-center" style="width: 10%">R</th>
+                                        <th class="text-center" style="width: 10%">F</th>
+                                        <th class="text-center" style="width: 10%">M</th>
+                                        <th class="text-center" style="width: 10%">P</th>
+                                        <th class="text-end" style="width: 20%">Stats</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+
+                    r.message.forEach(row => {
+                        let avg_val = row.average_score;
+                        let badge_class = 'score-standard';
+                        if (avg_val >= 4.5) badge_class = 'score-diamond';
+                        else if (avg_val >= 3.5) badge_class = 'score-gold';
+                        else if (avg_val >= 2.5) badge_class = 'score-silver';
+                        else if (avg_val >= 1.5) badge_class = 'score-bronze';
+
+                        html += `
+                                <tr>
+                                    <td>
+                                        <a href="/app/customer/${row.customer}" class="fw-bold">${row.customer_name}</a><br>
+                                        <small class="text-muted">${row.customer}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge ${badge_class}" style="font-size: 14px; padding: 8px 12px;">${avg_val}</span>
+                                    </td>
+                                    <td class="text-center"><span class="score-badge ${get_score_class(row.recency_score)}">${row.recency_score}</span></td>
+                                    <td class="text-center"><span class="score-badge ${get_score_class(row.frequency_score)}">${row.frequency_score}</span></td>
+                                    <td class="text-center"><span class="score-badge ${get_score_class(row.monetary_score)}">${row.monetary_score}</span></td>
+                                    <td class="text-center"><span class="score-badge ${get_score_class(row.payment_score)}">${row.payment_score || '-'}</span></td>
+                                    <td class="text-end">
+                                        <small>
+                                            Spend: ${format_currency(row.total_spent)}<br>
+                                            Orders: ${row.total_orders}<br>
+                                            Late: ${row.avg_days_late || 0} days
+                                        </small>
+                                    </td>
+                                </tr>
+                            `;
+                    });
+
+                    html += `</tbody></table></div>`;
+                    $('#customers-table').html(html);
+                } else {
+                    $('#customers-table').html(`
+                        <div class="text-center p-4">
+                            <p class="text-muted">No customers found matching filter.</p>
+                            <button class="btn btn-primary btn-sm" onclick="frappe.pages['rfm-dashboard'].get_primary_btn().trigger('click')">
+                                Calculate Scores Now
+                            </button>
+                        </div>
+                    `);
+                }
+            } catch (e) {
+                console.error(e);
+                $('#customers-table').html(`<div class="alert alert-danger">JS Error: ${e.message}</div>`);
+            }
+        },
+        error: function (r) {
+            console.error(r);
+            $('#customers-table').html(`<div class="alert alert-danger">Failed to fetch data. Please run 'bench migrate'.</div>`);
+        }
+    });
 }
-        .rfmp - dashboard.card - body {
-    padding: 20px;
-}
-        .score - badge {
-    display: inline - block;
-    width: 28px;
-    height: 28px;
-    line - height: 28px;
-    text - align: center;
-    border - radius: 50 %;
-    font - weight: bold;
-    font - size: 12px;
-}
-        .score - diamond { background: #10b981; color: white; }
-        .score - gold { background: #f59e0b; color: white; }
-        .score - silver { background: #9ca3af; color: white; }
-        .score - bronze { background: #b45309; color: white; }
         .score - standard { background: #ef4444; color: white; }
         .alert - item {
     padding: 12px;
