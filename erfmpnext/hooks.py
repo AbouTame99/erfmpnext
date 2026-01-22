@@ -151,7 +151,8 @@ scheduler_events = {
 	"cron": {
 		"0 8 * * *": [
 			"erfmpnext.erfmpnext.api.calculate_rfm_scores",
-			"erfmpnext.erfmpnext.api.create_history_snapshot"
+			"erfmpnext.erfmpnext.api.create_history_snapshot",
+			"erfmpnext.erfmpnext.api.calculate_product_analytics"
 		]
 	}
 }

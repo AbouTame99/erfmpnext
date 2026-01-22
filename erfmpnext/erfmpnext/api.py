@@ -3,7 +3,9 @@
 
 import frappe
 from frappe import _
-from frappe.utils import nowdate, getdate, add_days, now_datetime, flt
+from frappe.utils import nowdate, getdate, add_days, now_datetime, flt, add_months
+import statistics
+import math
 
 
 def get_score_from_thresholds(value, thresholds, reverse=False):
@@ -411,5 +413,163 @@ def get_alerts(limit=20, unread_only=True):
 @frappe.whitelist()
 def mark_alert_read(alert_name):
     """Mark an alert as read"""
-    frappe.db.set_value("RFM Alert", alert_name, "is_read", 1)
     return {"success": True}
+
+
+@frappe.whitelist()
+def calculate_product_analytics():
+    """Calculate ABC, XYZ, Turnover, and GMROI for all items"""
+    today = getdate(nowdate())
+    period_start = add_months(today, -12) # Last 12 months
+    
+    # 1. Fetch Sales Data (Revenue, Profit, Qty, COGS)
+    sales_data = frappe.db.sql("""
+        SELECT 
+            item_code,
+            SUM(base_net_amount) as revenue,
+            SUM(base_net_amount - (COALESCE(valuation_rate, 0) * qty)) as profit,
+            SUM(qty) as sales_qty,
+            COUNT(DISTINCT parent) as invoice_count
+        FROM `tabSales Invoice Item`
+        WHERE docstatus = 1 AND posting_date >= %s
+        GROUP BY item_code
+    """, (period_start,), as_dict=True)
+    
+    if not sales_data:
+        return {"processed": 0, "message": "No sales data found in the last 12 months."}
+
+    # 2. ABC Analysis (Revenue Based)
+    sales_data.sort(key=lambda x: x.revenue, reverse=True)
+    total_revenue = sum(item.revenue for item in sales_data)
+    running_revenue = 0
+    
+    # 3. XYZ Analysis (Variability Based)
+    monthly_sales = frappe.db.sql("""
+        SELECT 
+            item_code,
+            DATE_FORMAT(posting_date, '%%Y-%%m') as month,
+            SUM(qty) as qty
+        FROM `tabSales Invoice Item`
+        WHERE docstatus = 1 AND posting_date >= %s
+        GROUP BY item_code, month
+    """, (period_start,), as_dict=True)
+    
+    # 4. Inventory Data (Turnover & Ageing)
+    stock_data = frappe.get_all("Bin", fields=["item_code", "actual_qty", "valuation_rate"])
+    stock_map = {d.item_code: d for d in stock_data}
+
+    # Process results
+    processed = 0
+    for item in sales_data:
+        # ABC Logic
+        running_revenue += item.revenue
+        ratio = (running_revenue / total_revenue) * 100 if total_revenue else 100
+        abc = 'A' if ratio <= 80 else ('B' if ratio <= 95 else 'C')
+        
+        # XYZ Logic
+        item_months = [m.qty for m in monthly_sales if m.item_code == item.item_code]
+        while len(item_months) < 12:
+            item_months.append(0)
+            
+        cv = 0
+        xyz = 'Z'
+        if len(item_months) > 1:
+            mean = sum(item_months) / 12
+            if mean > 0:
+                std = statistics.pstdev(item_months)
+                cv = (std / mean)
+                xyz = 'X' if cv < 0.5 else ('Y' if cv <= 1.0 else 'Z')
+
+        # Turnover & GMROI Logic
+        bin_data = stock_map.get(item.item_code)
+        stock_qty = bin_data.actual_qty if bin_data and bin_data.actual_qty > 0 else 0
+        valuation = bin_data.valuation_rate if bin_data and bin_data.valuation_rate > 0 else 0
+        avg_inv_value = (valuation * stock_qty)
+        
+        cogs = item.revenue - item.profit
+        turnover = cogs / avg_inv_value if avg_inv_value > 0 else 0
+        gmroi = (item.profit / avg_inv_value) if avg_inv_value > 0 else 0
+
+        # Save to Item Analytics
+        existing = frappe.db.exists("Item Analytics", item.item_code)
+        if existing:
+            doc = frappe.get_doc("Item Analytics", item.item_code)
+        else:
+            doc = frappe.new_doc("Item Analytics")
+            doc.item_code = item.item_code
+            
+        doc.revenue = item.revenue
+        doc.profit = item.profit
+        doc.sales_count = item.sales_qty
+        doc.abc_category = abc
+        doc.xyz_category = xyz
+        doc.cv = cv
+        doc.turnover_ratio = turnover
+        doc.gmroi = gmroi
+        doc.last_calculated = now_datetime()
+        doc.save(ignore_permissions=True)
+        processed += 1
+        
+    calculate_market_basket()
+    frappe.db.commit()
+    return {"processed": processed}
+
+
+def calculate_market_basket():
+    """Find items frequently bought together (Association Rules)"""
+    frappe.db.delete("Item Basket Analysis", {"last_calculated": ["!=", None]})
+    
+    invoices = frappe.db.sql("""
+        SELECT parent, item_code 
+        FROM `tabSales Invoice Item` 
+        WHERE docstatus = 1
+        ORDER BY parent
+    """, as_dict=True)
+    
+    if not invoices: return
+
+    invoice_map = {}
+    for row in invoices:
+        if row.parent not in invoice_map:
+            invoice_map[row.parent] = set()
+        invoice_map[row.parent].add(row.item_code)
+        
+    total_invoices = len(invoice_map)
+    item_counts = {}
+    pair_counts = {}
+    
+    for items in invoice_map.values():
+        items_list = list(items)
+        for i, item_a in enumerate(items_list):
+            item_counts[item_a] = item_counts.get(item_a, 0) + 1
+            for item_b in items_list[i+1:]:
+                pair = tuple(sorted((item_a, item_b)))
+                pair_counts[pair] = pair_counts.get(pair, 0) + 1
+                
+    min_support_count = max(2, total_invoices * 0.01) # Lower threshold for basket
+    
+    for (item_a, item_b), count in pair_counts.items():
+        if count < min_support_count: continue
+        
+        support = (count / total_invoices) * 100
+        
+        # Rule: A -> B
+        conf_a_b = (count / item_counts[item_a]) * 100
+        lift = (support/100) / ((item_counts[item_a]/total_invoices) * (item_counts[item_b]/total_invoices))
+        save_basket_rule(item_a, item_b, support, conf_a_b, lift, count)
+        
+        # Rule: B -> A
+        conf_b_a = (count / item_counts[item_b]) * 100
+        save_basket_rule(item_b, item_a, support, conf_b_a, lift, count)
+
+
+def save_basket_rule(a, b, support, confidence, lift, count):
+    doc = frappe.new_doc("Item Basket Analysis")
+    doc.item_a = a
+    doc.item_b = b
+    doc.support = support
+    doc.confidence = confidence
+    doc.lift = lift
+    doc.frequency = count
+    doc.last_calculated = now_datetime()
+    doc.insert(ignore_permissions=True)

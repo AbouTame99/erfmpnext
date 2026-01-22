@@ -1,0 +1,136 @@
+{
+    "actions": [],
+    "creation": "2026-01-22 15:35:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "item_a",
+        "item_a_name",
+        "column_break_items",
+        "item_b",
+        "item_b_name",
+        "section_metrics",
+        "support",
+        "confidence",
+        "column_break_metrics",
+        "lift",
+        "frequency",
+        "section_calculated",
+        "last_calculated"
+    ],
+    "fields": [
+        {
+            "fieldname": "item_a",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Item A",
+            "options": "Item",
+            "reqd": 1
+        },
+        {
+            "fetch_from": "item_a.item_name",
+            "fieldname": "item_a_name",
+            "fieldtype": "Data",
+            "label": "Item A Name",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_items",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "item_b",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Item B",
+            "options": "Item",
+            "reqd": 1
+        },
+        {
+            "fetch_from": "item_b.item_name",
+            "fieldname": "item_b_name",
+            "fieldtype": "Data",
+            "label": "Item B Name",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_metrics",
+            "fieldtype": "Section Break",
+            "label": "Basket Metrics"
+        },
+        {
+            "description": "How often this pair appears overall",
+            "fieldname": "support",
+            "fieldtype": "Float",
+            "in_list_view": 1,
+            "label": "Support (%)",
+            "precision": "2",
+            "read_only": 1
+        },
+        {
+            "description": "Probability of B being bought when A is bought",
+            "fieldname": "confidence",
+            "fieldtype": "Float",
+            "in_list_view": 1,
+            "label": "Confidence (%)",
+            "precision": "2",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_metrics",
+            "fieldtype": "Column Break"
+        },
+        {
+            "description": "Strength of association (> 1 is strong)",
+            "fieldname": "lift",
+            "fieldtype": "Float",
+            "label": "Lift",
+            "precision": "2",
+            "read_only": 1
+        },
+        {
+            "description": "Absolute number of times seen together",
+            "fieldname": "frequency",
+            "fieldtype": "Int",
+            "label": "Frequency",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_calculated",
+            "fieldtype": "Section Break"
+        },
+        {
+            "fieldname": "last_calculated",
+            "fieldtype": "Datetime",
+            "label": "Last Calculated",
+            "read_only": 1
+        }
+    ],
+    "index_web_pages_for_search": 1,
+    "links": [],
+    "modified": "2026-01-22 15:35:00.000000",
+    "modified_by": "Administrator",
+    "module": "Erfmpnext",
+    "name": "Item Basket Analysis",
+    "naming_rule": "Autoincrement",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "sort_field": "confidence",
+    "sort_order": "DESC",
+    "states": [],
+    "title_field": "item_a",
+    "track_changes": 1
+}

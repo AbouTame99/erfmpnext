@@ -1,0 +1,167 @@
+{
+    "actions": [],
+    "autoname": "field:item_code",
+    "creation": "2026-01-22 15:30:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "item_code",
+        "item_name",
+        "section_categories",
+        "abc_category",
+        "xyz_category",
+        "column_break_scores",
+        "turnover_ratio",
+        "gmroi",
+        "section_stats",
+        "revenue",
+        "profit",
+        "sales_count",
+        "column_break_stats2",
+        "stock_age_days",
+        "cv",
+        "section_calculated",
+        "last_calculated"
+    ],
+    "fields": [
+        {
+            "fieldname": "item_code",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "in_standard_filter": 1,
+            "label": "Item Code",
+            "options": "Item",
+            "reqd": 1,
+            "unique": 1
+        },
+        {
+            "fetch_from": "item_code.item_name",
+            "fieldname": "item_name",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Item Name",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_categories",
+            "fieldtype": "Section Break",
+            "label": "Classifications"
+        },
+        {
+            "fieldname": "abc_category",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "ABC Category",
+            "options": "A\nB\nC",
+            "read_only": 1
+        },
+        {
+            "fieldname": "xyz_category",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "XYZ Category",
+            "options": "X\nY\nZ",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_scores",
+            "fieldtype": "Column Break"
+        },
+        {
+            "description": "Sales Turnover Ratio",
+            "fieldname": "turnover_ratio",
+            "fieldtype": "Float",
+            "label": "Turnover Ratio",
+            "precision": "2",
+            "read_only": 1
+        },
+        {
+            "description": "Gross Margin Return on Investment",
+            "fieldname": "gmroi",
+            "fieldtype": "Float",
+            "label": "GMROI",
+            "precision": "2",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_stats",
+            "fieldtype": "Section Break",
+            "label": "Performance Metrics"
+        },
+        {
+            "fieldname": "revenue",
+            "fieldtype": "Currency",
+            "in_list_view": 1,
+            "label": "Total Revenue",
+            "read_only": 1
+        },
+        {
+            "fieldname": "profit",
+            "fieldtype": "Currency",
+            "label": "Total Profit",
+            "read_only": 1
+        },
+        {
+            "fieldname": "sales_count",
+            "fieldtype": "Int",
+            "label": "Sales Quantity",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_stats2",
+            "fieldtype": "Column Break"
+        },
+        {
+            "description": "Average stock age in days",
+            "fieldname": "stock_age_days",
+            "fieldtype": "Int",
+            "label": "Stock Age (Days)",
+            "read_only": 1
+        },
+        {
+            "description": "Coefficient of Variation (for XYZ)",
+            "fieldname": "cv",
+            "fieldtype": "Float",
+            "label": "CV",
+            "precision": "3",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_calculated",
+            "fieldtype": "Section Break"
+        },
+        {
+            "fieldname": "last_calculated",
+            "fieldtype": "Datetime",
+            "label": "Last Calculated",
+            "read_only": 1
+        }
+    ],
+    "index_web_pages_for_search": 1,
+    "links": [],
+    "modified": "2026-01-22 15:30:00.000000",
+    "modified_by": "Administrator",
+    "module": "Erfmpnext",
+    "name": "Item Analytics",
+    "naming_rule": "By fieldname",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "sort_field": "revenue",
+    "sort_order": "DESC",
+    "states": [],
+    "title_field": "item_name",
+    "track_changes": 1
+}

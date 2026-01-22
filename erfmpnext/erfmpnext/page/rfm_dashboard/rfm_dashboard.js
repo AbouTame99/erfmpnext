@@ -31,8 +31,13 @@ frappe.pages['rfm-dashboard'].on_page_load = function (wrapper) {
         });
     });
 
+    // Add Product Analytics button
+    page.set_secondary_action('Product Analytics', () => {
+        frappe.set_route('product-analytics');
+    });
+
     // Add Settings button
-    page.set_secondary_action('Settings', () => {
+    page.add_inner_button('Settings', () => {
         frappe.set_route('Form', 'RFM Settings');
     });
 
