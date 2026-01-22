@@ -70,6 +70,12 @@ function load_dashboard(page) {
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">👥 Customer Scores</h5>
                             <div class="d-flex gap-2">
+                                <select id="page-length-filter" class="form-control" style="width: 100px;">
+                                    <option value="20">20 Rows</option>
+                                    <option value="50">50 Rows</option>
+                                    <option value="100">100 Rows</option>
+                                    <option value="500">500 Rows</option>
+                                </select>
                                 <select id="score-filter" class="form-control" style="width: 150px;">
                                     <option value="">All Scores</option>
                                     <option value="5">5 (Excellent)</option>
@@ -156,6 +162,12 @@ function load_dashboard(page) {
     // Load customers table
     load_customers_table();
 
+    // Page Length change handler
+    $(page.wrapper).on('change', '#page-length-filter', function () {
+        current_page_length = parseInt($(this).val());
+        load_customers_table(current_segment_filter, 0);
+    });
+
     // Filter change handler (attached to wrapper)
     $(page.wrapper).on('change', '#score-filter', function () {
         load_customers_table($(this).val());
@@ -217,7 +229,7 @@ function render_alerts(alerts) {
     $('#alerts-list').html(html);
 }
 
-const PAGE_LENGTH = 20;
+let current_page_length = 20;
 let current_start = 0;
 let current_segment_filter = null;
 
@@ -255,7 +267,7 @@ function load_customers_table(segment, start = 0) {
             fields: ['name', 'customer', 'customer_name', 'recency_score', 'frequency_score', 'monetary_score', 'payment_score', 'average_score', 'total_spent', 'total_orders', 'days_since_purchase', 'avg_days_late'],
             order_by: 'average_score desc',
             limit_start: current_start,
-            limit_page_length: PAGE_LENGTH
+            limit_page_length: current_page_length
         },
         callback: function (r) {
             try {
@@ -297,14 +309,14 @@ function load_customers_table(segment, start = 0) {
                     html += '</tbody></table></div>';
 
                     // Pagination Controls
-                    let hasNext = r.message.length === PAGE_LENGTH;
+                    let hasNext = r.message.length === current_page_length;
                     html += `
                         <div class="d-flex justify-content-between align-items-center mt-3">
-                            <button class="btn btn-sm btn-secondary" onclick="load_customers_table(undefined, ${current_start - PAGE_LENGTH})" ${current_start === 0 ? 'disabled' : ''}>
+                            <button class="btn btn-sm btn-secondary" onclick="load_customers_table(undefined, ${current_start - current_page_length})" ${current_start === 0 ? 'disabled' : ''}>
                                 Previous
                             </button>
                             <span class="text-muted">Rows ${current_start + 1} - ${current_start + r.message.length}</span>
-                            <button class="btn btn-sm btn-secondary" onclick="load_customers_table(undefined, ${current_start + PAGE_LENGTH})" ${!hasNext ? 'disabled' : ''}>
+                            <button class="btn btn-sm btn-secondary" onclick="load_customers_table(undefined, ${current_start + current_page_length})" ${!hasNext ? 'disabled' : ''}>
                                 Next
                             </button>
                         </div>
@@ -317,7 +329,7 @@ function load_customers_table(segment, start = 0) {
                         $('#customers-table').html(`
                             <div class="text-center p-4">
                                 <p class="text-muted">No more results.</p>
-                                <button class="btn btn-sm btn-secondary" onclick="load_customers_table(undefined, ${current_start - PAGE_LENGTH})">Go Back</button>
+                                <button class="btn btn-sm btn-secondary" onclick="load_customers_table(undefined, ${current_start - current_page_length})">Go Back</button>
                             </div>
                          `);
                     } else {
