@@ -422,12 +422,11 @@ def calculate_product_analytics():
     today = getdate(nowdate())
     period_start = add_months(today, -12) # Last 12 months
     
-    # 1. Fetch Sales Data (Revenue, Profit, Qty, COGS)
+    # 1. Fetch Sales Data (Revenue, Qty, Count)
     sales_data = frappe.db.sql("""
         SELECT 
             item_code,
             SUM(base_net_amount) as revenue,
-            SUM(base_net_amount - (COALESCE(valuation_rate, 0) * qty)) as profit,
             SUM(qty) as sales_qty,
             COUNT(DISTINCT parent) as invoice_count
         FROM `tabSales Invoice Item`
@@ -438,12 +437,16 @@ def calculate_product_analytics():
     if not sales_data:
         return {"processed": 0, "message": "No sales data found in the last 12 months."}
 
-    # 2. ABC Analysis (Revenue Based)
+    # 2. Inventory Data (Turnover & Valuation)
+    stock_data = frappe.get_all("Bin", fields=["item_code", "actual_qty", "valuation_rate"])
+    stock_map = {d.item_code: d for d in stock_data}
+
+    # 3. ABC Analysis (Revenue Based)
     sales_data.sort(key=lambda x: x.revenue, reverse=True)
     total_revenue = sum(item.revenue for item in sales_data)
     running_revenue = 0
     
-    # 3. XYZ Analysis (Variability Based)
+    # 4. XYZ Analysis (Variability Based)
     monthly_sales = frappe.db.sql("""
         SELECT 
             item_code,
@@ -453,10 +456,6 @@ def calculate_product_analytics():
         WHERE docstatus = 1 AND posting_date >= %s
         GROUP BY item_code, month
     """, (period_start,), as_dict=True)
-    
-    # 4. Inventory Data (Turnover & Ageing)
-    stock_data = frappe.get_all("Bin", fields=["item_code", "actual_qty", "valuation_rate"])
-    stock_map = {d.item_code: d for d in stock_data}
 
     # Process results
     processed = 0
@@ -486,9 +485,12 @@ def calculate_product_analytics():
         valuation = bin_data.valuation_rate if bin_data and bin_data.valuation_rate > 0 else 0
         avg_inv_value = (valuation * stock_qty)
         
-        cogs = item.revenue - item.profit
-        turnover = cogs / avg_inv_value if avg_inv_value > 0 else 0
-        gmroi = (item.profit / avg_inv_value) if avg_inv_value > 0 else 0
+        # Calculate approx COGS and Profit using current valuation
+        item_cogs = valuation * item.sales_qty
+        item_profit = item.revenue - item_cogs
+        
+        turnover = item_cogs / avg_inv_value if avg_inv_value > 0 else 0
+        gmroi = (item_profit / avg_inv_value) if avg_inv_value > 0 else 0
 
         # Save to Item Analytics
         existing = frappe.db.exists("Item Analytics", item.item_code)
@@ -499,7 +501,7 @@ def calculate_product_analytics():
             doc.item_code = item.item_code
             
         doc.revenue = item.revenue
-        doc.profit = item.profit
+        doc.profit = item_profit
         doc.sales_count = item.sales_qty
         doc.abc_category = abc
         doc.xyz_category = xyz
