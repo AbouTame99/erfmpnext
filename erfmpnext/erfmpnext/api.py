@@ -111,8 +111,8 @@ def calculate_rfm_scores():
         m_score = get_score_from_thresholds(flt(cust.total_spent) or 0, monetary_thresholds, reverse=True)
         
         # Calculate Payment score
-        payment_data = calculate_payment_stats(cust.customer)
-        p_score = get_score_from_thresholds(payment_data['avg_days_late'], payment_thresholds, reverse=False)
+        payment_data = calculate_payment_score_per_invoice(cust.customer, payment_thresholds)
+        p_score = payment_data['p_score']
         
         # Calculate totals
         total_score = r_score + f_score + m_score + p_score
@@ -166,25 +166,38 @@ def calculate_rfm_scores():
     return results
 
 
-def calculate_payment_stats(customer):
-    """Calculate payment behavior statistics for a customer"""
+def calculate_payment_score_per_invoice(customer, payment_thresholds):
+    """
+    Calculate Payment Score by scoring EACH invoice individually (1-5) and averaging them.
+    Logic:
+    1. Get all Invoices (Paid, Unpaid, Overdue) - excluding Cancelled/Return.
+    2. Check Maturity: If (Today - Posting Date) < Payment Terms Days -> SKIP (Too early to judge).
+    3. Calculate Days Late:
+       - If Fully Paid: (Last Payment Date - Due Date)
+       - If Unpaid/Partial: (Today - Due Date)
+    4. Score the "Days Late" using thresholds.
+    5. Final P Score = Average of all invoice scores.
+    """
     payment_terms_days = get_payment_terms_days(customer)
+    today = getdate(nowdate())
     
-    # Get paid invoices with payment dates
+    # Get all submitted invoices (not returns)
     invoices = frappe.db.sql("""
         SELECT 
+            si.name,
             si.posting_date,
+            si.due_date,
             si.grand_total,
-            pe.posting_date as payment_date
+            si.outstanding_amount
         FROM `tabSales Invoice` si
-        INNER JOIN `tabPayment Entry Reference` per ON per.reference_name = si.name
-        INNER JOIN `tabPayment Entry` pe ON pe.name = per.parent AND pe.docstatus = 1
         WHERE si.customer = %s 
             AND si.docstatus = 1 
+            AND si.is_return = 0
     """, (customer,), as_dict=True)
     
     if not invoices:
         return {
+            'p_score': 5, # Default to 5 if no history? Or 1? Usually 5 (innocent until proven guilty)
             'payment_terms_days': payment_terms_days,
             'avg_days_to_pay': 0,
             'avg_days_late': 0,
@@ -192,28 +205,97 @@ def calculate_payment_stats(customer):
             'late_payments': 0
         }
     
-    total_days_to_pay = 0
-    total_days_late = 0
+    total_invoice_scores = 0
+    valid_invoice_count = 0
+    
+    total_days_late_sum = 0 # For display stats only
+    days_late_count = 0
+    
     on_time = 0
     late = 0
     
     for inv in invoices:
-        days_to_pay = (getdate(inv.payment_date) - getdate(inv.posting_date)).days
-        days_late = days_to_pay - payment_terms_days
+        posting_date = getdate(inv.posting_date)
         
-        total_days_to_pay += days_to_pay
-        total_days_late += days_late
+        # Determine Due Date (Use Invoice Due Date if set, else calculate)
+        if inv.due_date:
+            due_date = getdate(inv.due_date)
+        else:
+            due_date = add_days(posting_date, payment_terms_days)
+            
+        # Maturity Check: Has the payment term passed relative to TODAY?
+        # If Today is before Due Date, we can't judge them yet (unless they already paid early!)
+        # Exception: If they paid early, we should count it as a "Good" score (5).
+        
+        is_fully_paid = (inv.outstanding_amount <= 0.1) # Float tolerance
+        
+        effective_payment_date = None
+        
+        if is_fully_paid:
+            # Get the date it was fully paid (max payment date)
+            # We query the Payment Entry Reference to find the latest payment date for this invoice
+            last_payment = frappe.db.sql("""
+                SELECT MAX(pe.posting_date) as paid_date
+                FROM `tabPayment Entry Reference` per
+                JOIN `tabPayment Entry` pe ON per.parent = pe.name
+                WHERE per.reference_name = %s AND pe.docstatus = 1
+            """, (inv.name,))
+            
+            if last_payment and last_payment[0][0]:
+                effective_payment_date = getdate(last_payment[0][0])
+            else:
+                # Fallback: If paid via Journal Entry or Credit Note, use posting date or today?
+                # Let's assume on time if we can't find payment entry (safe default) or posting date
+                effective_payment_date = posting_date 
+                
+        # --- Logic for Days Late ---
+        if is_fully_paid:
+            days_late = (effective_payment_date - due_date).days
+        else:
+            # Unpaid / Partially Paid
+            # If Today < Due Date: It's NOT late yet. It's "Pending".
+            # We should SKIP pending invoices unless we want to reward them for... existing?
+            # User requirement: "if the customer have 90 days... and created 30 days ago we dont calculate it"
+            if today < due_date:
+                continue # Skip unmature invoice
+            
+            # If Today >= Due Date: It is Overdue.
+            days_late = (today - due_date).days
+        
+        # Get Score for this specific invoice
+        # Lower days late = Higher Score
+        inv_score = get_score_from_thresholds(days_late, payment_thresholds, reverse=False)
+        
+        total_invoice_scores += inv_score
+        valid_invoice_count += 1
+        
+        # Stats
+        total_days_late_sum += days_late
+        days_late_count += 1
         
         if days_late <= 0:
             on_time += 1
         else:
             late += 1
-    
-    count = len(invoices)
+            
+    # Calculate Final Average P Score
+    if valid_invoice_count > 0:
+        final_p_score = round(total_invoice_scores / valid_invoice_count, 1) # Keep decimal for accuracy? Or integer? R,F,M are integers.
+        # R,F,M are integers 1-5. The api.py `get_score_from_thresholds` returns int.
+        # But `average_score` is float.
+        # Ideally P score should be int to match R,F,M? Or float?
+        # Let's return float, and maybe round it to nearest int if needed, but float is more precise for "Average of invoices".
+        # Actually, `total_score = r + f + m + p`. If p is float, total is float. That's fine.
+        avg_days_late_display = round(total_days_late_sum / days_late_count, 1) if days_late_count else 0
+    else:
+        final_p_score = 5 # Default if no mature invoices found?
+        avg_days_late_display = 0
+
     return {
+        'p_score': final_p_score,
         'payment_terms_days': payment_terms_days,
-        'avg_days_to_pay': round(total_days_to_pay / count, 1) if count else 0,
-        'avg_days_late': round(total_days_late / count, 1) if count else 0,
+        'avg_days_to_pay': 0, # Deprecated/Not calculated in this new logic easily
+        'avg_days_late': avg_days_late_display,
         'on_time_payments': on_time,
         'late_payments': late
     }
