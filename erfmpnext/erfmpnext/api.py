@@ -425,13 +425,14 @@ def calculate_product_analytics():
     # 1. Fetch Sales Data (Revenue, Qty, Count)
     sales_data = frappe.db.sql("""
         SELECT 
-            item_code,
-            SUM(base_net_amount) as revenue,
-            SUM(qty) as sales_qty,
-            COUNT(DISTINCT parent) as invoice_count
-        FROM `tabSales Invoice Item`
-        WHERE docstatus = 1 AND posting_date >= %s
-        GROUP BY item_code
+            sii.item_code,
+            SUM(sii.base_net_amount) as revenue,
+            SUM(sii.qty) as sales_qty,
+            COUNT(DISTINCT sii.parent) as invoice_count
+        FROM `tabSales Invoice Item` sii
+        JOIN `tabSales Invoice` si ON sii.parent = si.name
+        WHERE si.docstatus = 1 AND si.posting_date >= %s
+        GROUP BY sii.item_code
     """, (period_start,), as_dict=True)
     
     if not sales_data:
@@ -449,12 +450,13 @@ def calculate_product_analytics():
     # 4. XYZ Analysis (Variability Based)
     monthly_sales = frappe.db.sql("""
         SELECT 
-            item_code,
-            DATE_FORMAT(posting_date, '%%Y-%%m') as month,
-            SUM(qty) as qty
-        FROM `tabSales Invoice Item`
-        WHERE docstatus = 1 AND posting_date >= %s
-        GROUP BY item_code, month
+            sii.item_code,
+            DATE_FORMAT(si.posting_date, '%%Y-%%m') as month,
+            SUM(sii.qty) as qty
+        FROM `tabSales Invoice Item` sii
+        JOIN `tabSales Invoice` si ON sii.parent = si.name
+        WHERE si.docstatus = 1 AND si.posting_date >= %s
+        GROUP BY sii.item_code, month
     """, (period_start,), as_dict=True)
 
     # Process results
