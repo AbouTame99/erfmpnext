@@ -89,9 +89,8 @@ def calculate_rfm_scores():
         FROM `tabCustomer` c
         LEFT JOIN `tabSales Invoice` si ON si.customer = c.name 
             AND si.docstatus = 1 
-            AND si.posting_date >= %s
         GROUP BY c.name, c.customer_name
-    """, (period_start,), as_dict=True)
+    """, as_dict=True)
     
     results = {"processed": 0, "alerts_created": 0}
     
@@ -112,7 +111,7 @@ def calculate_rfm_scores():
         m_score = get_score_from_thresholds(flt(cust.total_spent) or 0, monetary_thresholds, reverse=True)
         
         # Calculate Payment score
-        payment_data = calculate_payment_stats(cust.customer, period_start)
+        payment_data = calculate_payment_stats(cust.customer)
         p_score = get_score_from_thresholds(payment_data['avg_days_late'], payment_thresholds, reverse=False)
         
         # Calculate totals
@@ -167,7 +166,7 @@ def calculate_rfm_scores():
     return results
 
 
-def calculate_payment_stats(customer, period_start):
+def calculate_payment_stats(customer):
     """Calculate payment behavior statistics for a customer"""
     payment_terms_days = get_payment_terms_days(customer)
     
@@ -182,8 +181,7 @@ def calculate_payment_stats(customer, period_start):
         INNER JOIN `tabPayment Entry` pe ON pe.name = per.parent AND pe.docstatus = 1
         WHERE si.customer = %s 
             AND si.docstatus = 1 
-            AND si.posting_date >= %s
-    """, (customer, period_start), as_dict=True)
+    """, (customer,), as_dict=True)
     
     if not invoices:
         return {
