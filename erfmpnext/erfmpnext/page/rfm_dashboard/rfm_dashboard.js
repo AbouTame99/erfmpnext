@@ -162,80 +162,71 @@ function load_dashboard(page) {
     });
 }
 
-let filters = [];
-if (segment) {
-    segment = parseInt(segment);
-    if (segment === 5) {
-        filters.push(["average_score", ">=", 4.5]);
-    } else if (segment === 4) {
-        filters.push(["average_score", ">=", 3.5]);
-        filters.push(["average_score", "<", 4.5]);
-    } else if (segment === 3) {
-        filters.push(["average_score", ">=", 2.5]);
-        filters.push(["average_score", "<", 3.5]);
-    } else if (segment === 2) {
-        filters.push(["average_score", ">=", 1.5]);
-        filters.push(["average_score", "<", 2.5]);
-    } else if (segment === 1) {
-        filters.push(["average_score", "<", 1.5]);
+function load_customers_table(segment) {
+    // Show Loading State
+    $('#customers-table').html(`
+        <div class="text-center p-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted">Loading customer data...</p>
+        </div>
+    `);
+
+    let filters = [];
+    if (segment) {
+        segment = parseInt(segment);
+        if (segment === 5) {
+            filters.push(["average_score", ">=", 4.5]);
+        } else if (segment === 4) {
+            filters.push(["average_score", ">=", 3.5]);
+            filters.push(["average_score", "<", 4.5]);
+        } else if (segment === 3) {
+            filters.push(["average_score", ">=", 2.5]);
+            filters.push(["average_score", "<", 3.5]);
+        } else if (segment === 2) {
+            filters.push(["average_score", ">=", 1.5]);
+            filters.push(["average_score", "<", 2.5]);
+        } else if (segment === 1) {
+            filters.push(["average_score", "<", 1.5]);
+        }
     }
+    padding: 15px 20px;
 }
-                        </div >
-    <div class="card-body">
-        <div id="customers-table"></div>
-    </div>
-                    </div >
-                </div >
-            </div >
-        </div >
-    <style>
-        .rfmp-dashboard .card {
-            box - shadow: 0 2px 8px rgba(0,0,0,0.1);
-        border: none;
-        border-radius: 8px;
-            }
-        .rfmp-dashboard .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 8px 8px 0 0;
-        padding: 15px 20px;
-            }
-        .rfmp-dashboard .card-body {
-            padding: 20px;
-            }
-        .score-badge {
-            display: inline-block;
-        width: 28px;
-        height: 28px;
-        line-height: 28px;
-        text-align: center;
-        border-radius: 50%;
-        font-weight: bold;
-        font-size: 12px;
-            }
-        .score-diamond {background: #10b981; color: white; }
-        .score-gold {background: #f59e0b; color: white; }
-        .score-silver {background: #9ca3af; color: white; }
-        .score-bronze {background: #b45309; color: white; }
-        .score-standard {background: #ef4444; color: white; }
-        .alert-item {
-            padding: 12px;
-        border-bottom: 1px solid #eee;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-            }
-        .alert-item:last-child {border - bottom: none; }
-        .alert-downgrade {border - left: 4px solid #ef4444; }
-        .alert-upgrade {border - left: 4px solid #10b981; }
-        .avg-score {
-            font - size: 18px;
-        font-weight: bold;
-        padding: 4px 12px;
-        border-radius: 20px;
-            }
-    </style>
-`);
+        .rfmp - dashboard.card - body {
+    padding: 20px;
+}
+        .score - badge {
+    display: inline - block;
+    width: 28px;
+    height: 28px;
+    line - height: 28px;
+    text - align: center;
+    border - radius: 50 %;
+    font - weight: bold;
+    font - size: 12px;
+}
+        .score - diamond { background: #10b981; color: white; }
+        .score - gold { background: #f59e0b; color: white; }
+        .score - silver { background: #9ca3af; color: white; }
+        .score - bronze { background: #b45309; color: white; }
+        .score - standard { background: #ef4444; color: white; }
+        .alert - item {
+    padding: 12px;
+    border - bottom: 1px solid #eee;
+    display: flex;
+    justify - content: space - between;
+    align - items: center;
+}
+        .alert - item: last - child { border - bottom: none; }
+        .alert - downgrade { border - left: 4px solid #ef4444; }
+        .alert - upgrade { border - left: 4px solid #10b981; }
+        .avg - score {
+    font - size: 18px;
+    font - weight: bold;
+    padding: 4px 12px;
+    border - radius: 20px;
+}
+    </style >
+    `);
 
     // Load segment distribution
     frappe.call({
