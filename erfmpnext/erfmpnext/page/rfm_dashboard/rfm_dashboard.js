@@ -67,9 +67,9 @@ function load_dashboard(page) {
             <div class="row">
                 <div class="col-12">
                     <div class="card mb-4">
-                        <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="card-header">
                             <h5 class="mb-0">👥 Customer Scores</h5>
-                            <div class="d-flex gap-2">
+                            <div class="rfmp-filter-group">
                                 <select id="page-length-filter" class="form-control" style="width: 100px;">
                                     <option value="20">20 Rows</option>
                                     <option value="50">50 Rows</option>
@@ -94,20 +94,68 @@ function load_dashboard(page) {
             </div>
         </div>
         <style>
+            .rfmp-dashboard {
+                padding: 10px;
+                background-color: #f4f7fb;
+            }
             .rfmp-dashboard .card {
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                border: none;
-                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.02), 0 10px 15px rgba(0,0,0,0.03);
+                border: 1px solid rgba(0,0,0,0.05);
+                border-radius: 12px;
+                overflow: hidden;
+                margin-bottom: 24px;
             }
             .rfmp-dashboard .card-header {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
                 color: white;
-                border-radius: 8px 8px 0 0;
-                padding: 15px 20px;
+                border: none;
+                padding: 16px 24px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .rfmp-dashboard .card-header h5 {
+                font-weight: 600;
+                letter-spacing: 0.5px;
+                font-size: 1.1rem;
             }
             .rfmp-dashboard .card-body {
-                padding: 20px;
+                padding: 24px;
             }
+            
+            /* Premium Filter Styling (Glassmorphism) */
+            .rfmp-filter-group {
+                display: flex;
+                gap: 12px;
+                background: rgba(255, 255, 255, 0.15);
+                padding: 4px;
+                border-radius: 10px;
+                backdrop-filter: blur(4px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            .rfmp-dashboard select.form-control {
+                background: rgba(255, 255, 255, 0.9);
+                border: none;
+                border-radius: 8px;
+                padding: 6px 14px;
+                height: auto;
+                font-size: 13px;
+                font-weight: 500;
+                color: #4f46e5;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            }
+            .rfmp-dashboard select.form-control:hover {
+                background: #fff;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            }
+            .rfmp-dashboard select.form-control:focus {
+                box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+                outline: none;
+            }
+
             .score-badge {
                 display: inline-block;
                 width: 28px;
@@ -117,27 +165,45 @@ function load_dashboard(page) {
                 border-radius: 50%;
                 font-weight: bold;
                 font-size: 12px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             }
             .score-diamond { background: #10b981; color: white; }
             .score-gold { background: #f59e0b; color: white; }
             .score-silver { background: #9ca3af; color: white; }
             .score-bronze { background: #b45309; color: white; }
             .score-standard { background: #ef4444; color: white; }
+            
             .alert-item {
-                padding: 12px;
-                border-bottom: 1px solid #eee;
+                padding: 16px;
+                border-bottom: 1px solid #f0f0f0;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+                transition: background 0.2s;
+            }
+            .alert-item:hover {
+                background: #f9fafb;
             }
             .alert-item:last-child { border-bottom: none; }
             .alert-downgrade { border-left: 4px solid #ef4444; }
             .alert-upgrade { border-left: 4px solid #10b981; }
+            
             .avg-score {
-                font-size: 18px;
-                font-weight: bold;
-                padding: 4px 12px;
+                font-size: 16px;
+                font-weight: 700;
+                padding: 6px 14px;
                 border-radius: 20px;
+                box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            }
+            
+            /* Progress Bars */
+            .progress {
+                background-color: #e5e7eb;
+                border-radius: 10px;
+                overflow: hidden;
+            }
+            .progress-bar {
+                box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
             }
         </style>
     `);
