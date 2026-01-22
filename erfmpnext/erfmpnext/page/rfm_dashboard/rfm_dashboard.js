@@ -72,11 +72,11 @@ function load_dashboard(page) {
                             <div class="d-flex gap-2">
                                 <select id="score-filter" class="form-control" style="width: 150px;">
                                     <option value="">All Scores</option>
-                                    <option value="5">5 (Diamond)</option>
-                                    <option value="4">4 (Gold)</option>
-                                    <option value="3">3 (Silver)</option>
-                                    <option value="2">2 (Bronze)</option>
-                                    <option value="1">1 (Standard)</option>
+                                    <option value="5">5 (Excellent)</option>
+                                    <option value="4">4 (Good)</option>
+                                    <option value="3">3 (Average)</option>
+                                    <option value="2">2 (Fair)</option>
+                                    <option value="1">1 (Poor)</option>
                                 </select>
                             </div>
                         </div>
@@ -269,11 +269,11 @@ if (segment) {
 
 function render_segment_chart(data) {
     const colors = {
-        'Diamond (5)': '#10b981',
-        'Gold (4)': '#f59e0b',
-        'Silver (3)': '#9ca3af',
-        'Bronze (2)': '#b45309',
-        'Standard (1)': '#ef4444'
+        'Excellent (5)': '#10b981',
+        'Good (4)': '#f59e0b',
+        'Average (3)': '#9ca3af',
+        'Fair (2)': '#b45309',
+        'Poor (1)': '#ef4444'
     };
 
     let html = '<div class="segment-bars">';

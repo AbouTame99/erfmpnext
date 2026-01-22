@@ -349,11 +349,11 @@ def get_segment_distribution():
     data = frappe.db.sql("""
         SELECT 
             CASE 
-                WHEN average_score >= 4.5 THEN 'Diamond (5)'
-                WHEN average_score >= 3.5 THEN 'Gold (4)'
-                WHEN average_score >= 2.5 THEN 'Silver (3)'
-                WHEN average_score >= 1.5 THEN 'Bronze (2)'
-                ELSE 'Standard (1)'
+                WHEN average_score >= 4.5 THEN 'Excellent (5)'
+                WHEN average_score >= 3.5 THEN 'Good (4)'
+                WHEN average_score >= 2.5 THEN 'Average (3)'
+                WHEN average_score >= 1.5 THEN 'Fair (2)'
+                ELSE 'Poor (1)'
             END as segment,
             COUNT(*) as count,
             ROUND(AVG(average_score), 1) as avg_score
@@ -361,11 +361,11 @@ def get_segment_distribution():
         WHERE average_score IS NOT NULL
         GROUP BY 
             CASE 
-                WHEN average_score >= 4.5 THEN 'Diamond (5)'
-                WHEN average_score >= 3.5 THEN 'Gold (4)'
-                WHEN average_score >= 2.5 THEN 'Silver (3)'
-                WHEN average_score >= 1.5 THEN 'Bronze (2)'
-                ELSE 'Standard (1)'
+                WHEN average_score >= 4.5 THEN 'Excellent (5)'
+                WHEN average_score >= 3.5 THEN 'Good (4)'
+                WHEN average_score >= 2.5 THEN 'Average (3)'
+                WHEN average_score >= 1.5 THEN 'Fair (2)'
+                ELSE 'Poor (1)'
             END
         ORDER BY avg_score DESC
     """, as_dict=True)
