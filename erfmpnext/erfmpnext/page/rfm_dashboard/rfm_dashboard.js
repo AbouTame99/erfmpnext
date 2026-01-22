@@ -162,164 +162,6 @@ function load_dashboard(page) {
     });
 }
 
-function load_customers_table(segment) {
-    // Show Loading State
-    $('#customers-table').html(`
-        <div class="text-center p-5">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-2 text-muted">Loading customer data...</p>
-        </div>
-    `);
-
-    let filters = [];
-    if (segment) {
-        segment = parseInt(segment);
-        if (segment === 5) {
-            filters.push(["average_score", ">=", 4.5]);
-        } else if (segment === 4) {
-            filters.push(["average_score", ">=", 3.5]);
-            filters.push(["average_score", "<", 4.5]);
-        } else if (segment === 3) {
-            filters.push(["average_score", ">=", 2.5]);
-            filters.push(["average_score", "<", 3.5]);
-        } else if (segment === 2) {
-            filters.push(["average_score", ">=", 1.5]);
-            filters.push(["average_score", "<", 2.5]);
-        } else if (segment === 1) {
-            filters.push(["average_score", "<", 1.5]);
-        }
-    }
-    frappe.call({
-        method: 'frappe.client.get_list',
-        args: {
-            doctype: 'Customer RFM Score',
-            filters: filters,
-            fields: ['name', 'customer', 'customer_name', 'recency_score', 'frequency_score', 'monetary_score', 'payment_score', 'average_score', 'total_spent', 'total_orders', 'days_since_purchase', 'avg_days_late'],
-            order_by: 'average_score desc',
-            limit_page_length: 50
-        },
-        callback: function (r) {
-            try {
-                if (r.message && r.message.length) {
-                    let html = `<div class="table-responsive">
-                            <table class="table table-bordered table-hover">
-                                <thead style="background-color: #f8f9fa;">
-                                    <tr>
-                                        <th style="width: 25%">Customer</th>
-                                        <th class="text-center" style="width: 15%">Avg Score</th>
-                                        <th class="text-center" style="width: 10%">R</th>
-                                        <th class="text-center" style="width: 10%">F</th>
-                                        <th class="text-center" style="width: 10%">M</th>
-                                        <th class="text-center" style="width: 10%">P</th>
-                                        <th class="text-end" style="width: 20%">Stats</th>
-                                    </tr>
-                                </thead>
-                                <tbody>`;
-
-                    r.message.forEach(row => {
-                        let avg_val = row.average_score;
-                        let badge_class = 'score-standard';
-                        if (avg_val >= 4.5) badge_class = 'score-diamond';
-                        else if (avg_val >= 3.5) badge_class = 'score-gold';
-                        else if (avg_val >= 2.5) badge_class = 'score-silver';
-                        else if (avg_val >= 1.5) badge_class = 'score-bronze';
-
-                        html += `
-                                <tr>
-                                    <td>
-                                        <a href="/app/customer/${row.customer}" class="fw-bold">${row.customer_name}</a><br>
-                                        <small class="text-muted">${row.customer}</small>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge ${badge_class}" style="font-size: 14px; padding: 8px 12px;">${avg_val}</span>
-                                    </td>
-                                    <td class="text-center"><span class="score-badge ${get_score_class(row.recency_score)}">${row.recency_score}</span></td>
-                                    <td class="text-center"><span class="score-badge ${get_score_class(row.frequency_score)}">${row.frequency_score}</span></td>
-                                    <td class="text-center"><span class="score-badge ${get_score_class(row.monetary_score)}">${row.monetary_score}</span></td>
-                                    <td class="text-center"><span class="score-badge ${get_score_class(row.payment_score)}">${row.payment_score || '-'}</span></td>
-                                    <td class="text-end">
-                                        <small>
-                                            Spend: ${format_currency(row.total_spent)}<br>
-                                            Orders: ${row.total_orders}<br>
-                                            Late: ${row.avg_days_late || 0} days
-                                        </small>
-                                    </td>
-                                </tr>
-                            `;
-                    });
-
-                    html += `</tbody></table></div>`;
-                    $('#customers-table').html(html);
-                } else {
-                    $('#customers-table').html(`
-                        <div class="text-center p-4">
-                            <p class="text-muted">No customers found matching filter.</p>
-                            <button class="btn btn-primary btn-sm" onclick="frappe.pages['rfm-dashboard'].get_primary_btn().trigger('click')">
-                                Calculate Scores Now
-                            </button>
-                        </div>
-                    `);
-                }
-            } catch (e) {
-                console.error(e);
-                $('#customers-table').html(`<div class="alert alert-danger">JS Error: ${e.message}</div>`);
-            }
-        },
-        error: function (r) {
-            console.error(r);
-            $('#customers-table').html(`<div class="alert alert-danger">Failed to fetch data. Please run 'bench migrate'.</div>`);
-        }
-    });
-}
-        .score - standard { background: #ef4444; color: white; }
-        .alert - item {
-    padding: 12px;
-    border - bottom: 1px solid #eee;
-    display: flex;
-    justify - content: space - between;
-    align - items: center;
-}
-        .alert - item: last - child { border - bottom: none; }
-        .alert - downgrade { border - left: 4px solid #ef4444; }
-        .alert - upgrade { border - left: 4px solid #10b981; }
-        .avg - score {
-    font - size: 18px;
-    font - weight: bold;
-    padding: 4px 12px;
-    border - radius: 20px;
-}
-    </style >
-    `);
-
-    // Load segment distribution
-    frappe.call({
-        method: 'erfmpnext.erfmpnext.api.get_segment_distribution',
-        callback: function (r) {
-            if (r.message && r.message.length) {
-                render_segment_chart(r.message);
-            } else {
-                $('#segment-chart').html('<p class="text-muted text-center">No data yet. Click "Calculate RFMP Scores" to start.</p>');
-            }
-        }
-    });
-
-    // Load alerts
-    frappe.call({
-        method: 'erfmpnext.erfmpnext.api.get_alerts',
-        args: { limit: 10, unread_only: false },
-        callback: function (r) {
-            render_alerts(r.message || []);
-        }
-    });
-
-    // Load customers table
-    load_customers_table();
-
-    // Filter change handler (attached to wrapper to ensure it persists if inner HTML changes)
-    $(page.wrapper).on('change', '#score-filter', function () {
-        load_customers_table($(this).val());
-    });
-}
 
 function render_segment_chart(data) {
     const colors = {
@@ -337,7 +179,7 @@ function render_segment_chart(data) {
         const pct = ((d.count / total) * 100).toFixed(1);
         const color = colors[d.segment] || '#6b7280';
         html += `
-    < div class="mb-3" >
+            <div class="mb-3">
                 <div class="d-flex justify-content-between mb-1">
                     <span><span class="segment-badge" style="background: ${color}; color: white; padding: 4px 12px; border-radius: 12px;">${d.segment}</span></span>
                     <span class="font-weight-bold">${d.count} (${pct}%)</span>
@@ -345,7 +187,7 @@ function render_segment_chart(data) {
                 <div class="progress" style="height: 8px;">
                     <div class="progress-bar" style="width: ${pct}%; background: ${color};"></div>
                 </div>
-            </div >
+            </div>
     `;
     });
     html += '</div>';
@@ -363,13 +205,13 @@ function render_alerts(alerts) {
         const alertClass = a.alert_type === 'Downgrade' ? 'alert-downgrade' : 'alert-upgrade';
         const icon = a.alert_type === 'Downgrade' ? '⬇️' : '⬆️';
         html += `
-    < div class="alert-item ${alertClass}" >
+            <div class="alert-item ${alertClass}">
                 <div>
                     <strong>${icon} ${a.customer_name}</strong><br>
                     <small class="text-muted">Score: ${a.previous_segment} → ${a.new_segment}</small>
                 </div>
                 <small class="text-muted">${frappe.datetime.prettyDate(a.created_on)}</small>
-            </div >
+            </div>
     `;
     });
     $('#alerts-list').html(html);
@@ -378,10 +220,10 @@ function render_alerts(alerts) {
 function load_customers_table(segment) {
     // Show Loading State
     $('#customers-table').html(`
-    < div class="text-center p-5" >
+        <div class="text-center p-5">
             <div class="spinner-border text-primary" role="status"></div>
             <p class="mt-2 text-muted">Loading customer data...</p>
-        </div >
+        </div>
     `);
 
     let filters = [];
@@ -421,21 +263,22 @@ function load_customers_table(segment) {
             try {
                 if (r.message && r.message.length) {
                     let html = `
-    < table class="table table-hover" >
-                            <thead>
-                                <tr>
-                                    <th>Customer</th>
-                                    <th>R</th>
-                                    <th>F</th>
-                                    <th>M</th>
-                                    <th>P</th>
-                                    <th>Avg</th>
-                                    <th>Total Spent</th>
-                                    <th>Orders</th>
-                                    <th>Days Late</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Customer</th>
+                                        <th>R</th>
+                                        <th>F</th>
+                                        <th>M</th>
+                                        <th>P</th>
+                                        <th>Avg</th>
+                                        <th>Total Spent</th>
+                                        <th>Orders</th>
+                                        <th>Days Late</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                     `;
                     r.message.forEach(c => {
                         const avgClass = get_score_class(c.average_score);
@@ -453,10 +296,10 @@ function load_customers_table(segment) {
                             </tr>
                         `;
                     });
-                    html += '</tbody></table > ';
-$('#customers-table').html(html);
+                    html += '</tbody></table></div>';
+                    $('#customers-table').html(html);
                 } else {
-    $('#customers-table').html(`
+                    $('#customers-table').html(`
                         <div class="text-center p-4">
                             <p class="text-muted">No customers found matching filter.</p>
                             <button class="btn btn-primary btn-sm" onclick="frappe.pages['rfm-dashboard'].get_primary_btn().trigger('click')">
@@ -464,21 +307,21 @@ $('#customers-table').html(html);
                             </button>
                         </div>
                     `);
-}
+                }
             } catch (e) {
-    console.error(e);
-    $('#customers-table').html(`<div class="alert alert-danger">JS Error: ${e.message}</div>`);
-}
+                console.error(e);
+                $('#customers-table').html(`<div class="alert alert-danger">JS Error: ${e.message}</div>`);
+            }
         },
-error: function (r) {
-    console.log(r);
-    let msg = 'Unknown error';
-    try {
-        if (r.message) msg = JSON.stringify(r.message);
-        if (r.exc) msg += '<br>' + r.exc;
-    } catch (e) { msg = r; }
+        error: function (r) {
+            console.log(r);
+            let msg = 'Unknown error';
+            try {
+                if (r.message) msg = JSON.stringify(r.message);
+                if (r.exc) msg += '<br>' + r.exc;
+            } catch (e) { msg = r; }
 
-    $('#customers-table').html(`
+            $('#customers-table').html(`
                 <div class="alert alert-danger">
                     <strong>Data Load Error:</strong><br>
                     It seems the database is not updated.<br>
@@ -487,7 +330,7 @@ error: function (r) {
                     <strong>Fix:</strong> Run <code>bench migrate</code> on your server.
                 </div>
             `);
-}
+        }
     });
 }
 
