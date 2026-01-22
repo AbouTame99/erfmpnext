@@ -230,23 +230,23 @@ function load_customers_table(segment) {
     if (segment) {
         segment = parseInt(segment);
         if (segment === 5) {
-            // Show scores >= 4.5 (Excellent)
-            filters.push(["average_score", ">=", 4.5]);
+            // Show scores == 5 (Excellent)
+            filters.push(["average_score", ">=", 5]);
         } else if (segment === 4) {
-            // Show scores >= 3.5 and < 4.5 (Good)
-            filters.push(["average_score", ">=", 3.5]);
-            filters.push(["average_score", "<", 4.5]);
+            // Show scores >= 4 and < 5 (Good)
+            filters.push(["average_score", ">=", 4]);
+            filters.push(["average_score", "<", 5]);
         } else if (segment === 3) {
-            // Show scores >= 2.5 and < 3.5 (Average)
-            filters.push(["average_score", ">=", 2.5]);
-            filters.push(["average_score", "<", 3.5]);
+            // Show scores >= 3 and < 4 (Average)
+            filters.push(["average_score", ">=", 3]);
+            filters.push(["average_score", "<", 4]);
         } else if (segment === 2) {
-            // Show scores >= 1.5 and < 2.5 (Fair)
-            filters.push(["average_score", ">=", 1.5]);
-            filters.push(["average_score", "<", 2.5]);
+            // Show scores >= 2 and < 3 (Fair)
+            filters.push(["average_score", ">=", 2]);
+            filters.push(["average_score", "<", 3]);
         } else if (segment === 1) {
-            // Show scores < 1.5 (Poor)
-            filters.push(["average_score", "<", 1.5]);
+            // Show scores < 2 (Poor)
+            filters.push(["average_score", "<", 2]);
         }
     }
 
@@ -314,31 +314,17 @@ function load_customers_table(segment) {
             }
         },
         error: function (r) {
-            console.log(r);
-            let msg = 'Unknown error';
-            try {
-                if (r.message) msg = JSON.stringify(r.message);
-                if (r.exc) msg += '<br>' + r.exc;
-            } catch (e) { msg = r; }
-
-            $('#customers-table').html(`
-                <div class="alert alert-danger">
-                    <strong>Data Load Error:</strong><br>
-                    It seems the database is not updated.<br>
-                    <small style="font-size: 10px; font-family: monospace;">${msg}</small><br>
-                    <hr>
-                    <strong>Fix:</strong> Run <code>bench migrate</code> on your server.
-                </div>
-            `);
+            console.error(r);
+            $('#customers-table').html(`<div class="alert alert-danger">Failed to fetch data. Please run 'bench migrate'.</div>`);
         }
     });
 }
 
 function get_score_class(score) {
-    if (score >= 4.5) return 'score-diamond';
-    if (score >= 3.5) return 'score-gold';
-    if (score >= 2.5) return 'score-silver';
-    if (score >= 1.5) return 'score-bronze';
+    if (score >= 5) return 'score-diamond';
+    if (score >= 4) return 'score-gold';
+    if (score >= 3) return 'score-silver';
+    if (score >= 2) return 'score-bronze';
     return 'score-standard';
 }
 
