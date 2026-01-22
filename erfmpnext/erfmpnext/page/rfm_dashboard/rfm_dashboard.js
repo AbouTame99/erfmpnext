@@ -230,23 +230,23 @@ function load_customers_table(segment) {
     if (segment) {
         segment = parseInt(segment);
         if (segment === 5) {
-            // Show scores from 5 down to 4
-            filters.push(["average_score", ">=", 4]);
+            // Show scores >= 4.5 (Excellent)
+            filters.push(["average_score", ">=", 4.5]);
         } else if (segment === 4) {
-            // Show scores from 4 down to 3
-            filters.push(["average_score", ">=", 3]);
-            filters.push(["average_score", "<", 4]);
+            // Show scores >= 3.5 and < 4.5 (Good)
+            filters.push(["average_score", ">=", 3.5]);
+            filters.push(["average_score", "<", 4.5]);
         } else if (segment === 3) {
-            // Show scores from 3 down to 2
-            filters.push(["average_score", ">=", 2]);
-            filters.push(["average_score", "<", 3]);
+            // Show scores >= 2.5 and < 3.5 (Average)
+            filters.push(["average_score", ">=", 2.5]);
+            filters.push(["average_score", "<", 3.5]);
         } else if (segment === 2) {
-            // Show scores from 2 down to 1
-            filters.push(["average_score", ">=", 1]);
-            filters.push(["average_score", "<", 2]);
+            // Show scores >= 1.5 and < 2.5 (Fair)
+            filters.push(["average_score", ">=", 1.5]);
+            filters.push(["average_score", "<", 2.5]);
         } else if (segment === 1) {
-            // Show scores less than 1
-            filters.push(["average_score", "<", 1]);
+            // Show scores < 1.5 (Poor)
+            filters.push(["average_score", "<", 1.5]);
         }
     }
 
